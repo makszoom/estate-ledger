@@ -14,9 +14,9 @@
 
 **Стек:** статический сайт (GitHub Pages/CF Pages, $0) + vanilla JS + localStorage + print-CSS PDF. Никаких серверов, API, аккаунтов.
 
-**Домен:** estateledger.app ($12/год, Cloudflare Registrar, оплата oplatym) — покупка Day 1, нужен для AdSense и YMYL-доверия.
+**Домен:** estateledger.app ($12/год, CF Registrar, oplatym) — **ПОКУПАЕТСЯ ПОСЛЕ ГОТОВОГО САЙТА** (решение Макса 15.10). Продукт живёт на makszoom.github.io/estate-ledger (паттерн ogfy/imgtopdf); на github.io-фазе: `<meta name="robots" content="noindex">` → при покупке домена снять → чистая индексация от домена. Домен нужен только для GSC-старта и AdSense-заявки.
 
-**Timeline:** MVP 8 дней → домен+GSC → 30-дневный трафик-тест → kill/push решение.
+**Timeline:** MVP 8 дней → deploy на github.io (+donate-кнопка) → SEO-контент → **домен+GSC** (когда сайт готов) → 30-дневный трафик-тест → kill/push решение.
 
 ---
 
@@ -121,7 +121,8 @@
 
 | День | Что | Выход |
 |---|---|---|
-| **0** | Домен estateledger.app (oplatym, CF Registrar) + DNS → Pages | домен ready |
+| **0** | ImageGen-макет лендинга → approval Макса (домен НЕ покупается до готового сайта) | макет утверждён |
+| **6б** | Покупка estateledger.app → DNS/CNAME → GSC → sitemap (снять noindex) | домен+GSC live |
 | **1** | Скелет: хэш-роутинг, localStorage-схема (estate/assets/transactions), UI shell, модуль E (Setup) | ввод estate работает |
 | **2** | Модуль A: Asset Inventory (все классы, DOD value, probate-флаг) | инвентарь живой |
 | **3** | Модуль B: Cashflow Ledger (4 семантики, Principal/Income flag, payee/purpose) | ledger живой |
@@ -178,7 +179,7 @@ YMYL-паттерны: дисклеймер на каждой странице, 
 
 ## 9. Что нужно от Макса
 
-1. **Домен estateledger.app** — покупка $12 (oplatym) — Day 0
+1. **Домен estateledger.app** — покупка $12 ПОСЛЕ готового сайта (решение Макса); donate-кнопка сразу после deploy
 2. **Подтверждение хостинга:** GitHub Pages vs CF Pages (решаю сам, если без разницы)
 3. **USDT-кошелёк проекта** (для donate v1.1) — по традиции, отдельный
 4. **Согласие на Reddit/FB-посты** (2-3, вопрос-формат, после MVP)
@@ -187,7 +188,7 @@ YMYL-паттерны: дисклеймер на каждой странице, 
 
 ## 10. Timeline summary
 
-- Day 0: домен
+- Day 0: ImageGen-макет + approval
 - Day 1-8: MVP (8 дней)
 - Day 9-14: SEO-контент + Reddit/FB посты
 - Day 15-45: GSC-наблюдение (first-data), итерации UX по фидбеку
