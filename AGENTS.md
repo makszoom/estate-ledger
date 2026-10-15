@@ -109,8 +109,12 @@ estate-ledger/
 | Component | Status |
 |-----------|--------|
 | План + конкурентный анализ | ✅ 15.10 (commit 79dc072) |
+| AGENTS.md документация по паттерну pdf-merge | ✅ 15.10 (commit 35dfd84) |
+| landing.json (журнал решений лендинга) | ✅ 15.10 (commit 35dfd84) — 7 секций, 2 ассета, все copy |
 | Ниша найдена кроном v3 №6 | ✅ 15.10 ⭐⭐⭐⭐ |
 | Gap подтверждён (LegatePro живьём) | ✅ 15.10: free НЕТ вообще |
+| Скилл landing-production (метод сборки лендинга) | ✅ создан 15.10 |
+| ImageGen-макет лендинга (Phase 1) | ⏳ следующий шаг → approval Макса |
 | Домен estateledger.app | ⏳ ожидает покупки (oplatym) |
 | Лендинг (landing.json + макет) | ⏳ следующий шаг |
 | MVP модули E/A/B/C/D/P/S | ❌ не начато |
