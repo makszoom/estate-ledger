@@ -132,6 +132,29 @@ estate-ledger/
 6. **Позже, когда сайт готов:** покупка estateledger.app → DNS/CNAME → GSC → sitemap → заявка AdSense при трафике
 7. **Indexing-гигиена:** на github.io-фазе `<meta name="robots" content="noindex">` → при переходе на домен убрать → чистая индексация с кастомного домена без каннибализации/301-потерь
 
+
+## Ad Placement Map (монетизация, заранее решено)
+
+**Принцип (Макс, 15.10): free-first, реклама = основная монетизация. Слоты физически ИЗОЛИРОВАНЫ от инструмента.**
+
+| Страница | Ad-слоты | Когда |
+|---|---|---|
+| SEO-страницы (6 шт) | top-of-content (336x280 inline) + end-of-content (responsive) + sidebar 300x600 desktop | после трафика |
+| probate-accounting.html (education-хаб) | in-article между секциями + end-of-guide | после трафика |
+| index.html (лендинг) | между секциями ПОСЛЕ pain-comparison + над footer | опционально (если RPM-выгода окупит UX) |
+| future гайды (10+ education) | in-article | основной поток дохода |
+| **app.html (инструмент)** | ❌ НИКОГДА — head чистый без ад-скриптов | — |
+| Sample Estate view | ❌ нет | — |
+| PDF print view | ❌ никогда (документ юзера) | — |
+| privacy/about/404 | ❌ нет | — |
+
+**Правила:**
+- Ad-скрипты ТОЛЬКО в head SEO/landing/guide страниц; app.html физически без них
+- ads.txt в корне при заявке
+- Прогноз дохода: legal+US in-content display RPM $15-30 → при 5K pv = $75-150/мес; scaling с education-гайдами (10-20 страниц: $200-600/мес при 20-30K pv)
+- GDPR (EU-трафик): Google Consent Mode v2 в consent.js (~30 строк), ад-скрипты после consent
+- AdSense-заявка: НЕ раньше стабильных 5K pv/мес 2 месяца подряд; approval ~2 нед
+
 ## Kill Criteria (Зуев-стопы)
 
 - Launch+30д: <300 pv/мес → заморозка контента
