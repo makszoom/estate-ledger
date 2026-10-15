@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ledger — Estate Ledger</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAF8; --ink:#1A1A1A; --navy:#1E3A5F; --navy-dark:#142B47;
+  --green:#2D6A4F; --red:#B00020; --border:#E5E2DC;
+  --gray-text:#5A5F6A; --card:#FFFFFF;
+  --shadow-sm:0 1px 3px rgba(26,26,26,.06);
+  --shadow-md:0 4px 16px rgba(26,26,26,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;font-size:17px;-webkit-font-smoothing:antialiased}
+
+/* Top bar */
+.topbar{background:var(--navy);color:#fff;display:flex;align-items:center;gap:16px;padding:12px 20px}
+.topbar .logo{font-family:Georgia,serif;font-size:17px;color:#fff;text-decoration:none;font-weight:700}
+.topbar .estates{margin-left:16px;display:flex;gap:8px;align-items:center}
+.topbar select{background:var(--navy-dark);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:6px 10px;font-size:14px}
+.topbar .spacer{flex:1}
+.topbar a.tl{color:rgba(255,255,255,.85);font-size:14px}
+.topbar a.tl:hover{color:#fff}
+
+/* Backup banner */
+.banner{display:none;background:#EAF4EF;color:var(--green);padding:10px 20px;font-size:14px;text-align:center}
+.banner.show{display:block}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;background:#fff;border-bottom:1px solid var(--border);padding:0 12px;overflow-x:auto}
+.tab{padding:14px 20px;font-size:15px;color:var(--gray-text);border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--navy);font-weight:700;border-bottom-color:var(--navy)}
+.tab .count{display:inline-block;background:#EAF4EF;color:var(--green);border-radius:10px;font-size:12px;padding:0 7px;margin-left:6px}
+
+/* Panels */
+.panel{display:none;max-width:880px;margin:0 auto;padding:28px 20px 80px}
+.panel.active{display:block}
+.panel h2{font-size:24px;letter-spacing:-.02em;margin-bottom:6px}
+.panel .hint{font-size:14px;color:var(--gray-text);margin-bottom:22px}
+
+/* Forms */
+.f-group{margin-bottom:18px}
+label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+label .req{color:var(--red)}
+input,select{width:100%;max-width:420px;padding:12px 14px;font-size:16px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,58,95,.12)}
+.err{color:var(--red);font-size:13px;margin-top:5px;display:none}
+.err.show{display:block}
+.hintfield{font-size:12.5px;color:var(--gray-text);margin-top:4px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97);transition:transform .1s ease-out}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-navy:hover{background:var(--navy-dark)}
+.btn-ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.btn-ghost:hover{background:#F2F4F8}
+.btn-row{display:flex;gap:12px;margin-top:22px}
+
+/* Empty state */
+.empty{background:var(--card);border:2px dashed var(--border);border-radius:var(--radius);padding:48px 24px;text-align:center}
+.empty h3{margin-bottom:8px;font-size:18px}
+.empty p{color:var(--gray-text);font-size:15px;margin-bottom:18px}
+
+/* Modal (class-based, никогда display:flex!important) */
+.modal{display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex;background:rgba(20,25,35,.45);backdrop-filter:blur(6px) saturate(160%);animation:overlayIn .25s ease forwards}
+.modal-card{background:#fff;border-radius:14px;box-shadow:0 12px 48px rgba(0,0,0,.22);max-width:560px;width:100%;padding:28px;transform:scale(.95);opacity:0;animation:cardIn .3s cubic-bezier(.16,1,.3,1) .05s forwards}
+@keyframes overlayIn{to{background:rgba(20,25,35,.45)}}
+@keyframes cardIn{to{transform:scale(1);opacity:1}}
+.modal.card-h2{margin-bottom:8px}
+.modal h3{margin-bottom:8px}
+.modal p{color:var(--gray-text);font-size:15px;margin-bottom:18px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  .modal-card{transform:none;opacity:1}
+}
+@media(max-width:640px){
+  input,select{max-width:100%}
+  .btn{width:100%}
+  .btn-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="../index.html" style="opacity:.94">← Estate Ledger</a>
+  <div class="estates" id="estate-switcher" hidden>
+    <select id="estate-select" aria-label="Switch estate"></select>
+  </div>
+  <div class="spacer"></div>
+  <a class="tl" href="#" id="backup-link">Backup data</a>
+</div>
+
+<div class="banner" id="backup-banner">
+  Your data lives in this browser only. <b>Download a JSON backup</b> weekly so a cleared browser doesn't erase months of records.
+  <button class="btn btn-ghost" style="padding:6px 14px;font-size:13px;margin-left:12px" id="banner-download">Download backup</button>
+  <button class="btn" style="padding:6px 14px;font-size:13px;background:transparent;color:var(--green)" id="banner-dismiss">Dismiss</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="setup">Setup</div>
+  <div class="tab" data-tab="assets">Assets <span class="count" id="count-assets" hidden></span></div>
+  <div class="tab" data-tab="ledger">Ledger <span class="count" id="count-ledger" hidden></span></div>
+  <div class="tab" data-tab="report">Account</div>
+  <div class="tab" data-tab="export">Backup &amp; Export</div>
+</div>
+
+<!-- ============ SETUP ============ -->
+<div class="panel active" id="panel-setup">
+  <!-- no-estate state -->
+  <div id="setup-empty" class="empty" hidden>
+    <h3>Welcome</h3>
+    <p>Create your first estate to start tracking assets, receipts, and the final account. Everything stays in this browser.</p>
+    <button class="btn btn-navy" id="btn-create-first">Create an estate</button>
+    <p style="margin-top:14px;font-size:13px"><a href="?sample=1">Open the Sample Estate instead →</a></p>
+  </div>
+
+  <!-- setup form -->
+  <div id="setup-form" hidden>
+    <h2>Estate Setup</h2>
+    <p class="hint">Basic facts the court will need on every page of your account.</p>
+    <form id="form-estate" novalidate>
+      <div class="f-group">
+        <label for="f-decedent">Name of decedent <span class="req">*</span></label>
+        <input id="f-decedent" autocomplete="off" placeholder="e.g. John A. Marshal">
+        <div class="err" id="err-decedent"></div>
+      </div>
+      <div class="f-group">
+        <label for="f-case">Court / case number <span style="font-weight:400;color:var(--gray-text)">(optional)</span></label>
+        <input id="f-case" autocomplete="off" placeholder="e.g. 26-P-0814" maxlength="40">
+        <div class="err" id="err-case"></div>
+        <div class="hintfield">Printed on every page of the account, if provided.</div>
+      </div>
+      <div class="f-group">
+        <label for="f-state">State <span class="req">*</span></label>
+        <select id="f-state"><option value="">— Select state —</option></select>
+        <div class="err" id="err-state"></div>
+        <div class="hintfield">Estate Ledger organizes your records; your court's own filing format may differ.</div>
+      </div>
+      <div class="f-group">
+        <label for="f-role">Your role <span class="req">*</span></label>
+        <select id="f-role">
+          <option value="executor">Executor (named in the will)</option>
+          <option value="administrator">Administrator (no will)</option>
+          <option value="personal_representative">Personal Representative (same as executor in some states)</option>
+          <option value="trustee">Trustee (trust administration)</option>
+        </select>
+        <div class="err" id="err-role"></div>
+      </div>
+      <div class="f-group">
+        <label for="f-dod">Date of death <span class="req">*</span></label>
+        <input type="date" id="f-dod">
+        <div class="err" id="err-dod"></div>
+        <div class="hintfield">Sets the valuation date for the inventory ("date-of-death value").</div>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-navy" id="btn-save-estate">Save estate</button>
+        <button type="button" class="btn btn-ghost" id="btn-delete-estate" hidden>Delete this estate</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ ASSETS (D2) ============ -->
+<div class="panel" id="panel-assets"><h2>Assets</h2><p class="hint">Day 2 — inventory with date-of-death values.</p></div>
+<!-- ============ LEDGER (D3) ============ -->
+<div class="panel" id="panel-ledger"><h2>Ledger</h2><p class="hint">Day 3 — receipts, payments, distributions.</p></div>
+<!-- ============ REPORT (D5) ============ -->
+<div class="panel" id="panel-report"><h2>Summary of Account</h2><p class="hint">Day 5 — charge-and-discharge report.</p></div>
+<!-- ============ EXPORT (D6) ============ -->
+<div class="panel" id="panel-export"><h2>Backup &amp; Export</h2><p class="hint">Day 6 — JSON backup / CSV / print.</p></div>
+
+<!-- Confirm-delete modal -->
+<div class="modal" id="modal-delete" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <h3>Delete this estate?</h3>
+    <p>The estate record (setup, assets, ledger) will be permanently removed from this browser. Download a backup first if you need the data.</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="btn-cancel-delete">Cancel</button>
+      <button class="btn" style="background:var(--red);color:#fff" id="btn-confirm-delete">Delete permanently</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
