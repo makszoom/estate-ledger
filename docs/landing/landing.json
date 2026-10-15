@@ -1,7 +1,7 @@
 {
   "projectRoot": "C:/Users/MiniPC/Projects/estate-ledger",
   "workDir": "C:/Users/MiniPC/Projects/estate-ledger/docs/landing",
-  "approval": null,
+  "approval": "Макс утвердил hero-v6.png (16.10.2026, ~01:11): заголовок/кнопки/бейджи/document card/палитра — да. Мелочи к исправлению в коде: убрать hex-метку #FAFAF8 в навбаре, убрать цветок-иконку у логотипа (заглушки генератора). Секции 2-7 без макета — по landing.json + палитре.",
   "brief": "Бесплатный браузерный estate accounting для executor'ов США (50-75 лет, стресс потери близкого, впервые, не-tech). Боль: непонятно как вести учёт наследства и отчитаться суду; Excel-шаблоны не считают баланс; платные (EstateExec $199/estate) дороги для простых семей. CTA: 'Open the Ledger' → https://estateledger.app/app.html (открыть инструмент, без регистрации). Вторичный CTA: 'Try the Sample Estate' (fictional demo, read-only). Дисклеймер: educational organizing tool, not legal advice.",
   "style": "Trust Legal: бумажный белый #FAFAF8 фон, ink #1A1A1A, юридический navy #1E3A5F (CTA/заголовки), зелёный #2D6A4F только для баланса-подтверждения, красный #B00020 ошибок. Fonts: Inter (UI) в лендинге; Georgia serif только в макете судебного PDF-блока (документная семантика). Материал: чистые карточки на белом, тонкие границы #E5E2DC, судебный документ-образ как key visual. Вдохновение: UScourts.gov, IRS.gov (официальность), Settled Estate (продукт). НЕ SaaS-стартап стиль, НЕ тёмная тема.",
   "layout": {
@@ -35,7 +35,8 @@
         "sample-account-pdf"
       ],
       "files": [],
-      "layoutReference": ""
+      "layoutReference": "",
+      "status": "approved"
     },
     {
       "id": "pain-comparison",
@@ -47,7 +48,8 @@
       "motion": "none для карточек (документ-серьёзность); только hover lift 2px",
       "assets": [],
       "files": [],
-      "layoutReference": ""
+      "layoutReference": "",
+      "status": "approved"
     },
     {
       "id": "how-it-works",
@@ -59,7 +61,8 @@
       "motion": "fade-up с stagger (.08s), один раз",
       "assets": [],
       "files": [],
-      "layoutReference": ""
+      "layoutReference": "",
+      "status": "approved"
     },
     {
       "id": "features",
@@ -71,7 +74,8 @@
       "motion": "fade-up stagger",
       "assets": [],
       "files": [],
-      "layoutReference": ""
+      "layoutReference": "",
+      "status": "approved"
     },
     {
       "id": "sample-demo",
@@ -85,7 +89,8 @@
         "sample-estate-screenshot"
       ],
       "files": [],
-      "layoutReference": ""
+      "layoutReference": "",
+      "status": "approved"
     },
     {
       "id": "faq",
@@ -97,7 +102,8 @@
       "motion": "none (YMYL-серьёзность), только стандартный details-toggle",
       "assets": [],
       "files": [],
-      "layoutReference": ""
+      "layoutReference": "",
+      "status": "approved"
     },
     {
       "id": "footer-cta",
@@ -109,7 +115,8 @@
       "motion": "none",
       "assets": [],
       "files": [],
-      "layoutReference": ""
+      "layoutReference": "",
+      "status": "approved"
     }
   ]
 }
