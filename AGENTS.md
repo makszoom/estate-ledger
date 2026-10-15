@@ -115,22 +115,22 @@ estate-ledger/
 | Gap подтверждён (LegatePro живьём) | ✅ 15.10: free НЕТ вообще |
 | Скилл landing-production (метод сборки лендинга) | ✅ создан 15.10 |
 | ImageGen-макет лендинга (Phase 1) | ⏳ следующий шаг → approval Макса |
-| Домен estateledger.app | ⏳ ожидает покупки (oplatym) |
+| Домен estateledger.app | ⏳ ПОСЛЕ готового сайта (решение Макса 15.10: сначала github.io) |
 | Лендинг (landing.json + макет) | ⏳ следующий шаг |
 | MVP модули E/A/B/C/D/P/S | ❌ не начато |
 | SEO-страницы + education | ❌ после MVP |
 | GSC + sitemap | ❌ после домена |
 | AdSense | ❌ после 5K pv (реалистично 8-12 недель post-launch) |
 
-## Priorities (порядок работ)
+## Priorities (порядок работ, решено с Максом 15.10)
 
-1. **День 0:** домен (Макс покупает) + landing.json + ImageGen-макет лендинга → approval Макса (параллельно: не блокирует код)
-2. **День 1-4:** MVP-модули (код не ждёт домена/лендинга)
+1. **День 0:** landing.json (✅ выполнено) + ImageGen-макет лендинга → approval Макса. **Домен НЕ покупаем до готового сайта** (Zuev: нулевые затраты до продакшена; ogfy/imgtopdf живут на github.io)
+2. **День 1-4:** MVP-модули (код не зависит от домена)
 3. **День 5:** лендинг по утверждённому макету + Sample Estate
-4. **День 6:** deploy + DNS + GSC + sitemap
-5. **День 7-14:** 6 SEO страниц + 2-3 education-гайда (до 15+ страниц для AdSense) + Reddit/FB посты
-6. **День 21+ (после индексации):** заявка AdSense при минимальном трафике
-7. **Параллельно после deploy:** donate-кнопка (USDT, ранний денежный сигнал до AdSense)
+4. **День 6:** deploy на GitHub Pages (makszoom.github.io/estate-ledger) + donate-кнопка USDT
+5. **День 7-14:** 6 SEO страниц + 2-3 education-гайда + Reddit/FB посты
+6. **Позже, когда сайт готов:** покупка estateledger.app → DNS/CNAME → GSC → sitemap → заявка AdSense при трафике
+7. **Indexing-гигиена:** на github.io-фазе `<meta name="robots" content="noindex">` → при переходе на домен убрать → чистая индексация с кастомного домена без каннибализации/301-потерь
 
 ## Kill Criteria (Зуев-стопы)
 
