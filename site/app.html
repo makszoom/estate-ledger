@@ -81,7 +81,33 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
   .modal-card{transform:none;opacity:1}
 }
+
+/* ===== Assets panel (D2) ===== */
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px}
+.fg-wide{grid-column:1/-1}
+.totals{margin:26px 0 14px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;padding:14px 18px;max-width:480px}
+.tot-row{display:flex;justify-content:space-between;font-size:15px;padding:6px 0}
+.tot-row b{font-variant-numeric:tabular-nums}
+.tot-row.warn{color:#8A5A00}
+.tot-row.warn b{color:#8A5A00}
+.table-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px;min-width:640px}
+.tbl th{background:var(--navy);color:#fff;text-align:left;padding:10px 14px;font-size:12.5px;letter-spacing:.06em;font-weight:600}
+.tbl th.r,.tbl td.r{text-align:right;font-variant-numeric:tabular-nums}
+.tbl td{padding:10px 14px;border-top:1px solid #F2EFE9;vertical-align:top}
+.tbl .aclass{color:var(--gray-text);font-size:13px}
+.tbl .flag{font-size:12px;padding:2px 8px;border-radius:12px;background:#EAF4EF;color:var(--green);white-space:nowrap}
+.tbl .flag.yes{background:#F1F1F1;color:var(--gray-text)}
+.tbl .flag.unknown{background:#FDF3E0;color:#8A5A00}
+.tbl .none{color:#C9C4BC;font-style:italic}
+.row-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.link-btn{background:none;border:none;color:var(--navy);font-size:13.5px;cursor:pointer;padding:4px 6px;text-decoration:underline}
+.link-btn.danger{color:var(--red)}
+.empty.mini{border-style:dashed;padding:26px 20px;margin-top:14px}
+.empty.mini p{margin:0}
+
 @media(max-width:640px){
+  .f-grid{grid-template-columns:1fr}
   input,select{max-width:100%}
   .btn{width:100%}
   .btn-row{flex-direction:column}
@@ -169,7 +195,78 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 </div>
 
 <!-- ============ ASSETS (D2) ============ -->
-<div class="panel" id="panel-assets"><h2>Assets</h2><p class="hint">Day 2 — inventory with date-of-death values.</p></div>
+<div class="panel" id="panel-assets">
+  <h2>Asset Inventory</h2>
+  <p class="hint">List every asset the estate controls, at its <b>date-of-death value</b> — that date is the valuation standard courts expect. Assets that pass outside probate (life insurance with a named beneficiary, TOD accounts) are tracked separately.</p>
+
+  <!-- add/edit form -->
+  <form id="form-asset" novalidate>
+    <div class="f-grid">
+      <div class="f-group fg-wide">
+        <label for="a-name">What is it <span class="req">*</span></label>
+        <input id="a-name" maxlength="120" placeholder="e.g. Home at 12 Elm St or Chase checking ••4521">
+        <div class="err" id="aerr-name"></div>
+      </div>
+      <div class="f-group">
+        <label for="a-class">Asset class <span class="req">*</span></label>
+        <select id="a-class"></select>
+        <div class="err" id="aerr-class"></div>
+      </div>
+      <div class="f-group">
+        <label for="a-value">Date-of-death value <span style="font-weight:400;color:var(--gray-text)">(USD, optional)</span></label>
+        <input id="a-value" inputmode="decimal" placeholder="e.g. 35,000 or appraisal letter value">
+        <div class="err" id="aerr-value"></div>
+      </div>
+      <div class="f-group">
+        <label for="a-probate">Passes outside probate? <span class="req">*</span></label>
+        <select id="a-probate">
+          <option value="unknown">Not sure yet</option>
+          <option value="no">No — part of the probate estate</option>
+          <option value="yes">Yes — transfers by beneficiary/TOD</option>
+        </select>
+        <div class="err" id="aerr-probate"></div>
+        <div class="hintfield">“Not sure yet” is normal — verify from the deed or account paperwork; until then it doesn't count in the total.</div>
+      </div>
+      <div class="f-group">
+        <label for="a-source">Value source <span style="font-weight:400;color:var(--gray-text)">(optional)</span></label>
+        <select id="a-source">
+          <option value="">Not set</option>
+          <option value="appraisal">Appraisal letter</option>
+          <option value="account_statement">Account statement</option>
+          <option value="market_estimate">Market estimate</option>
+          <option value="tax_assessment">Tax assessment</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="f-group fg-wide">
+        <label for="a-ref">Reference <span style="font-weight:400;color:var(--gray-text)">(optional — who/where the value came from)</span></label>
+        <input id="a-ref" maxlength="120" placeholder="e.g. Coldwell Banker appraisal, Jan 20">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn btn-navy" id="btn-save-asset">Add asset</button>
+      <button type="button" class="btn btn-ghost" id="btn-cancel-asset" hidden>Cancel edit</button>
+    </div>
+  </form>
+
+  <!-- totals -->
+  <div class="totals" id="assets-totals">
+    <div class="tot-row"><span>Probate inventory total</span><b id="tot-probate">$0.00</b></div>
+    <div class="tot-row" id="tot-outside-row" hidden><span>Passing outside probate</span><b id="tot-outside">$0.00</b></div>
+    <div class="tot-row warn" id="tot-unknown-row" hidden><span>Ownership to verify</span><b id="tot-unknown"></b></div>
+  </div>
+
+  <!-- table -->
+  <div id="assets-table-wrap" class="table-wrap">
+    <table class="tbl" id="assets-table">
+      <thead><tr><th>Asset</th><th>Class</th><th class="r">DOD value</th><th>In probate?</th><th></th></tr></thead>
+      <tbody id="assets-tbody"></tbody>
+    </table>
+  </div>
+  <div class="empty mini" id="assets-empty" hidden>
+    <p><b>No assets yet.</b> Start with bank accounts, the home, vehicles — anything the estate controls.</p>
+  </div>
+</div>
 <!-- ============ LEDGER (D3) ============ -->
 <div class="panel" id="panel-ledger"><h2>Ledger</h2><p class="hint">Day 3 — receipts, payments, distributions.</p></div>
 <!-- ============ REPORT (D5) ============ -->

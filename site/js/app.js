@@ -19,7 +19,15 @@
     banner: $('backup-banner'), bannerDl: $('banner-download'), bannerDismiss: $('banner-dismiss'),
     modalDelete: $('modal-delete'), cancelDelete: $('btn-cancel-delete'), confirmDelete: $('btn-confirm-delete'),
     backupLink: $('backup-link'),
-    counts: { assets: $('count-assets'), ledger: $('count-ledger') }
+    counts: { assets: $('count-assets'), ledger: $('count-ledger') },
+    // D2: assets
+    aForm: $('form-asset'), aName: $('a-name'), aClass: $('a-class'), aValue: $('a-value'),
+    aProbate: $('a-probate'), aSource: $('a-source'), aRef: $('a-ref'),
+    aErr: { name: $('aerr-name'), class: $('aerr-class'), value: $('aerr-value'), probate: $('aerr-probate') },
+    aSave: $('btn-save-asset'), aCancel: $('btn-cancel-asset'),
+    aTbody: $('assets-tbody'), aEmpty: $('assets-empty'), aWrap: $('assets-table-wrap'),
+    tProbate: $('tot-probate'), tOutside: $('tot-outside'), tOutsideRow: $('tot-outside-row'),
+    tUnRow: $('tot-unknown-row'), tUn: $('tot-unknown')
   };
   let editingId = null;
   let deletingId = null;
@@ -29,6 +37,13 @@
     const o = document.createElement('option');
     o.value = s; o.textContent = s;
     els.state.appendChild(o);
+  });
+  // D2: asset class options
+  const { ASSET_CLASSES, ASSET_CLASS_LABELS } = window.EstateLedgerCore;
+  ASSET_CLASSES.forEach(c => {
+    const o = document.createElement('option');
+    o.value = c; o.textContent = ASSET_CLASS_LABELS[c];
+    els.aClass.appendChild(o);
   });
 
   // ---- tabs ----
@@ -198,13 +213,114 @@
     if (ev.shiftKey) { ev.preventDefault(); restoreInput.click(); }
   });
 
+  // ---- D2: assets form ----
+  let editingAssetId = null;
+  function showAssetErr(key, msg) {
+    const el = els.aErr[key];
+    if (!el) return;
+    if (msg) { el.textContent = msg; el.classList.add('show'); }
+    else { el.textContent = ''; el.classList.remove('show'); }
+  }
+  function resetAssetForm() {
+    editingAssetId = null;
+    els.aForm.reset();
+    els.aProbate.value = 'unknown';
+    showAssetErr('name', null); showAssetErr('class', null); showAssetErr('value', null); showAssetErr('probate', null);
+    els.aSave.textContent = 'Add asset';
+    els.aCancel.hidden = true;
+  }
+  els.aCancel.addEventListener('click', resetAssetForm);
+
+  els.aForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const fields = {
+      name: els.aName.value,
+      assetClass: els.aClass.value,
+      dodValue: els.aValue.value.trim() === '' ? null : els.aValue.value,
+      outsideProbate: els.aProbate.value,
+      valuationSource: els.aSource.value,
+      reference: els.aRef.value
+    };
+    const estateId = store.state.activeEstateId;
+    if (!estateId) return;
+    const wasEdit = !!editingAssetId;
+    const res = wasEdit
+      ? store.updateAsset(estateId, editingAssetId, fields)
+      : store.addAsset(estateId, fields);
+    if (!res.ok) {
+      Object.entries(res.errors).forEach(([k, m]) => showAssetErr(k, m));
+      return;
+    }
+    resetAssetForm();  // сброс ДО feedback: editingAssetId уже null
+    els.aSave.textContent = wasEdit ? 'Updated ✓' : 'Added ✓';
+    setTimeout(() => { els.aSave.textContent = 'Add asset'; }, 1100);
+    render();
+  });
+
+  function renderAssets() {
+    const estateId = store.state.activeEstateId;
+    if (!estateId) { els.aTbody.innerHTML = ''; els.aEmpty.hidden = false; els.aWrap.hidden = true; els.aForm.style.display = 'none'; return; }
+    els.aForm.style.display = '';
+    const list = store.listAssets(estateId);
+    els.aEmpty.hidden = list.length > 0;
+    els.aWrap.hidden = list.length === 0;
+    els.aTbody.innerHTML = '';
+    list.forEach(a => {
+      const tr = document.createElement('tr');
+      const flagCls = a.outsideProbate === 'yes' ? 'flag yes' : a.outsideProbate === 'unknown' ? 'flag unknown' : 'flag';
+      const flagTxt = a.outsideProbate === 'yes' ? 'outside' : a.outsideProbate === 'unknown' ? 'verify' : 'in probate';
+      const val = a.dodValue == null ? '<span class="none">to appraise</span>' : fmtMoney(a.dodValue);
+      tr.innerHTML = `<td><b>${esc(a.name)}</b>${a.reference ? `<div style="font-size:12px;color:var(--gray-text)">${esc(a.reference)}</div>` : ''}</td>` +
+        `<td class="aclass">${esc(ASSET_CLASS_LABELS[a.assetClass] || a.assetClass)}</td>` +
+        `<td class="r">${val}</td>` +
+        `<td><span class="${flagCls}">${flagTxt}</span></td>` +
+        `<td><div class="row-actions"><button class="link-btn" data-edit="${a.id}">Edit</button><button class="link-btn danger" data-del="${a.id}">Delete</button></div></td>`;
+      els.aTbody.appendChild(tr);
+    });
+    // totals
+    const t = store.inventoryTotals(estateId);
+    els.tProbate.textContent = fmtMoney(t.probateTotal);
+    els.tOutsideRow.hidden = !(t.outsideTotal > 0);
+    els.tOutside.textContent = fmtMoney(t.outsideTotal);
+    els.tUnRow.hidden = !t.unknownCount;
+    els.tUn.textContent = `${t.unknownCount} asset${t.unknownCount === 1 ? '' : 's'}`;
+  }
+
+  // delegation: edit/delete buttons
+  els.aTbody.addEventListener('click', (ev) => {
+    const editId = ev.target.dataset.edit;
+    const delId = ev.target.dataset.del;
+    const estateId = store.state.activeEstateId;
+    if (!estateId) return;
+    if (editId) {
+      const a = store.listAssets(estateId).find(x => x.id === editId);
+      if (!a) return;
+      editingAssetId = editId;
+      els.aName.value = a.name;
+      els.aClass.value = a.assetClass;
+      els.aValue.value = a.dodValue == null ? '' : String(a.dodValue);
+      els.aProbate.value = a.outsideProbate;
+      els.aSource.value = a.valuationSource || '';
+      els.aRef.value = a.reference || '';
+      els.aSave.textContent = 'Save changes';
+      els.aCancel.hidden = false;
+      els.aName.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (delId) {
+      if (store.deleteAsset(estateId, delId)) { if (editingAssetId === delId) resetAssetForm(); render(); }
+    }
+  });
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
   // ---- render (tab counts + panels) ----
   function render() {
     const e = store.getActive();
-    // counts placeholders for D2/D3 (0 for now)
     const assets = (e && e.assets && e.assets.length) || 0;
     const txs = (e && e.transactions && e.transactions.length) || 0;
     els.counts.assets.hidden = !assets; els.counts.assets.textContent = assets;
+    renderAssets();
     els.counts.ledger.hidden = !txs; els.counts.ledger.textContent = txs;
     maybeShowBanner();
     fillForm();

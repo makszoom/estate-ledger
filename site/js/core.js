@@ -19,6 +19,13 @@
     'vehicle', 'business_interest', 'other'
   ];
   const TX_KINDS = ['money_in', 'money_out', 'distribution', 'reimbursable'];
+  const OUTSIDE_PROBATE = ['yes', 'no', 'unknown'];
+  const VALUATION_SOURCES = ['appraisal', 'account_statement', 'market_estimate', 'tax_assessment', 'other'];
+  const ASSET_CLASS_LABELS = {
+    real_estate: 'Real Estate', bank_account: 'Bank Account', brokerage: 'Brokerage Account',
+    cash: 'Cash', personal_property: 'Personal Property', vehicle: 'Vehicle',
+    business_interest: 'Business Interest', other: 'Other'
+  };
   const ACCOUNT_TYPE = ['principal', 'income'];
 
   function todayISO() { return new Date().toISOString().slice(0, 10); }
@@ -51,7 +58,8 @@
   function emptyEstateFields() {
     return {
       decedent: '', caseNumber: '', state: '', role: 'executor',
-      dateOfDeath: '', createdAt: todayISO(), lastBackupReminder: todayISO()
+      dateOfDeath: '', createdAt: todayISO(), lastBackupReminder: todayISO(),
+      assets: [], transactions: []
     };
   }
 
@@ -121,7 +129,92 @@
       return Object.values(this.state.estates).sort((a, b) =>
         (b.createdAt || '').localeCompare(a.createdAt || ''));
     }
+  // ---- D2: Assets ----
+  addAsset(estateId, fields) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return { ok: false, errors: { general: 'Estate not found' } };
+    const errs = Store.validateAsset(fields);
+    if (Object.keys(errs).length) return { ok: false, errors: errs };
+    const asset = {
+      id: uid(),
+      name: fields.name.trim(),
+      assetClass: fields.assetClass,
+      dodValue: parseMoney(fields.dodValue),
+      outsideProbate: fields.outsideProbate || 'unknown',
+      valuationSource: fields.valuationSource || '',
+      reference: (fields.reference || '').trim(),
+      createdAt: todayISO()
+    };
+    estate.assets = estate.assets || [];
+    estate.assets.push(asset);
+    this.save();
+    return { ok: true, asset };
   }
+  updateAsset(estateId, assetId, fields) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return { ok: false, errors: { general: 'Estate not found' } };
+    const idx = (estate.assets || []).findIndex(a => a.id === assetId);
+    if (idx === -1) return { ok: false, errors: { general: 'Asset not found' } };
+    const merged = Object.assign({}, estate.assets[idx], fields);
+    const errs = Store.validateAsset(merged);
+    if (Object.keys(errs).length) return { ok: false, errors: errs };
+    if ('dodValue' in fields) merged.dodValue = parseMoney(merged.dodValue);
+    estate.assets[idx] = merged;
+    this.save();
+    return { ok: true, asset: merged };
+  }
+  deleteAsset(estateId, assetId) {
+    const estate = this.state.estates[estateId];
+    if (!estate || !estate.assets) return false;
+    const before = estate.assets.length;
+    estate.assets = estate.assets.filter(a => a.id !== assetId);
+    if (estate.assets.length === before) return false;
+    this.save();
+    return true;
+  }
+  listAssets(estateId) {
+    const estate = this.state.estates[estateId];
+    return (estate && estate.assets) ? estate.assets : [];
+  }
+  /**
+   * Court-standard inventory totals. 'unknown' ownership assets NOT counted
+   * in probate total (Settled pattern: unknown is a legal fact to verify —
+   * guessing makes totals look finished).
+   */
+  inventoryTotals(estateId) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return null;
+    const assets = estate.assets || [];
+    let probateTotal = 0, outsideTotal = 0, unknownCount = 0;
+    for (const a of assets) {
+      const v = a.dodValue;
+      if (a.outsideProbate === 'yes') outsideTotal += (v || 0);
+      else if (a.outsideProbate === 'unknown') unknownCount++;
+      else if (v != null) probateTotal += v;
+    }
+    return {
+      probateTotal: round2(probateTotal),
+      outsideTotal: round2(outsideTotal),
+      unknownCount, count: assets.length
+    };
+  }
+  }
+
+    Store.validateAsset = function (fields) {
+    const errs = {};
+    if (!fields || !fields.name || !fields.name.trim()) errs.name = 'Asset description is required';
+    else if (fields.name.trim().length > 120) errs.name = 'Maximum 120 characters';
+    if (!fields || !fields.assetClass) errs.assetClass = 'Asset class is required';
+    else if (!ASSET_CLASSES.includes(fields.assetClass)) errs.assetClass = 'Unknown asset class';
+    if (fields) {
+      const v = parseMoney(fields.dodValue);
+      if (v !== null && v < 0) errs.dodValue = 'Value cannot be negative';
+      if (fields.dodValue != null && fields.dodValue !== '' && v === null) errs.dodValue = 'Enter amount as a number (e.g. 35000 or $35,000)';
+      if (fields.outsideProbate !== undefined && !OUTSIDE_PROBATE.includes(fields.outsideProbate)) errs.outsideProbate = 'yes/no/unknown only';
+    }
+    return errs;
+  };
+
 
   Store.validateEstate = function (fields) {
     const errs = {};
@@ -141,7 +234,7 @@
   };
 
   const API = {
-    STORAGE_KEY, US_STATES, ROLES, ASSET_CLASSES, TX_KINDS, ACCOUNT_TYPE,
+    STORAGE_KEY, US_STATES, ROLES, ASSET_CLASSES, ASSET_CLASS_LABELS, OUTSIDE_PROBATE, VALUATION_SOURCES, TX_KINDS, ACCOUNT_TYPE,
     Store, todayISO, uid, round2, parseMoney, fmtMoney, emptyState, emptyEstateFields
   };
 
