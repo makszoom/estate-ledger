@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://makszoom.github.io/estate-ledger/sitemap.xml
