@@ -53,7 +53,7 @@ estate-ledger/
 │   ├── js/fee-schedules.js    # 24 штата, статут-refs (D11)
 │   ├── js/bank-import.js      # CSV parse/mapping/dedupe (D12)
 │   └── js/sample-estate.js    # Jane E. Sample demo (?sample=1, idempotent)
-├── tests/                     # ★ 381 тест: 9 unit-файлов + e2e-day1..12/d9-ui (CDP 9333, профиль 2, cache-size=1)
+├── tests/                     # ★ 472 теста: 11 unit-файлов + e2e-day1..18 (CDP 9333, profile + --disk-cache-size=1)
 ├── scripts/                   # деплой-скрипты
 └── .env                       # секреты (НЕ в git)
 ```
@@ -127,7 +127,8 @@ estate-ledger/
 | v2: Д9-Д10 carry-value (ядро+UI+печать+sample, vision-verified) | ✅ 17.10 (e44eea5, 7a71d85, 12dbe95) — 284 теста |
 | v2: Д11 fee calculator (24 штата + SEO-лендинг) | ✅ 17.10 (ee0bb83) — 344 теста |
 | v2: Д12-13 bank CSV import (parse/dedupe/preview/commit) | ✅ 17.10 (cda0759) — 381 тест, LIVE 20/20 |
-| **v2: Д17-18 (cудебный worksheet CA + multi-estate dash)** | ⏳ NEXT |
+| v2: Д18 multi-estate dashboard (cards/archive/restore) | ✅ 17.10 (f215662) — 472 теста, LIVE 19/19 |
+| **v2: Д19-20 (полировка, полный финал, отчёт Максу)** | ⏳ NEXT |
 | Домен estateledger.app | ⏸ ОТЛОЖЕН Максом 17.10 («давай отложим») |
 | USDT-кошелёк donate | ⏸ ждёт адрес от Макса (placeholder в модалке) |
 | GSC / AdSense / Reddit-FB посты | ⏸ после домена / 5K pv / руками Макса |
