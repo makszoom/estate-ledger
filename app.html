@@ -186,6 +186,15 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
   .btn{width:100%}
   .btn-row{flex-direction:column}
 }
+
+.basis-picker{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+.basis-opt{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border:1.5px solid var(--border,#E5E2DC);border-radius:10px;cursor:pointer;background:#fff;transition:border-color .15s,background .15s}
+.basis-opt:hover{border-color:#9DB2D0}
+.basis-opt input[type=radio]{margin-top:3px;accent-color:var(--navy,#1E3A5F);width:16px;height:16px}
+.basis-opt span{font-size:14.5px;color:#464B56;line-height:1.45}
+.doc-basis-badge{display:inline-block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#5A6B87;border-radius:6px;padding:4px 10px;margin-bottom:10px}
+.doc-basis-badge.carry{background:var(--navy,#1E3A5F)}
+.doc-basis-note{font-size:13px;color:#5A5F6A;font-style:italic;margin-bottom:14px;display:none}
 </style>
 </head>
 <body>
@@ -253,6 +262,17 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
           <option value="trustee">Trustee (trust administration)</option>
         </select>
         <div class="err" id="err-role"></div>
+      </div>
+      <div class="f-group">
+        <label>Accounting basis <span class="req">*</span></label>
+        <div class="basis-picker" role="radiogroup" aria-label="Accounting basis">
+          <label class="basis-opt"><input type="radio" name="basis" value="standard" checked>
+            <span><b>Standard</b> — market value (most states)</span></label>
+          <label class="basis-opt"><input type="radio" name="basis" value="carry">
+            <span><b>Carry value</b> — executor's carrying value (CA, VA + 5 others)</span></label>
+        </div>
+        <div class="err" id="err-basis"></div>
+        <div class="hintfield" id="hint-basis">Carry value is required in CA, VA and several other states; if unsure, ask your court or attorney.</div>
       </div>
       <div class="f-group">
         <label for="f-dod">Date of death <span class="req">*</span></label>
@@ -457,9 +477,11 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 
     <!-- court document -->
     <div class="doc rpt-doc">
+      <div class="doc-basis-badge" id="doc-basis-badge" hidden></div>
       <div class="doc-title">STATEMENT OF RECEIPTS AND DISBURSEMENTS<br><span style="font-size:13px;letter-spacing:.02em">FINAL ACCOUNT</span></div>
       <div class="doc-caption">In the Matter of the Estate of <b id="rpt-dec">—</b>, Deceased<span id="rpt-case"></span></div>
       <div class="doc-caption" id="rpt-court">Filed by the Executor · State: <span id="rpt-state">—</span></div>
+      <div class="doc-basis-note" id="doc-basis-note">Values reflect the executor's carrying value of each asset (as under your control), not current market value.</div>
 
       <div class="rpt-cols">
         <div class="rpt-col">
@@ -628,9 +650,21 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
   </div>
 </div>
 
+<!-- D9.5: accounting basis confirm -->
+<div class="modal" id="modal-basis" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <h3>Switch accounting basis?</h3>
+    <p id="basis-confirm-text">Your records stay the same; only the report presentation changes.</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="btn-basis-cancel">Cancel</button>
+      <button class="btn btn-navy" id="btn-basis-confirm">Switch basis</button>
+    </div>
+  </div>
+</div>
+
 <script src="js/core.js"></script>
 <script src="js/sample-estate.js"></script>
-<script src="js/app.js"></script>
+<script src="js/app.js?v=2"></script>
 <div class="toasts" id="toasts"></div>
 </body>
 </html>
