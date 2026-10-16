@@ -4,7 +4,7 @@
  */
 (function () {
   'use strict';
-  const { Store, US_STATES, ROLES, fmtMoney } = window.EstateLedgerCore;
+  const { Store, US_STATES, ROLES, fmtMoney, calculateStatutoryFee, FEE_SCHEDULES } = window.EstateLedgerCore;
   const store = new Store();
   window.__ELStore = store;  // test/e2e access (read-only usage)
 
@@ -243,6 +243,56 @@
     if (t2) {
         $('modal-basis').classList.remove('open'); applyBasisNow();
     }
+  });
+
+  // ---- D11: statutory fee module ----
+  function renderFee() {
+    const e = store.getActive();
+    const panel = $('fee-panel');
+    if (!panel) return;
+    if (!e) { panel.hidden = true; return; }
+    panel.hidden = false;
+    const sch = FEE_SCHEDULES[e.state];
+    const value = (e.assets || []).filter(x => x.outsideProbate !== 'yes').reduce((s, x) => s + (x.dodValue || 0), 0);
+    const flows = { income: 0, disbursements: 0 };
+    (e.transactions || []).forEach(tx => {
+      if (tx.kind === 'money_in') flows.income += tx.amount || 0;
+      if (tx.kind === 'money_out') flows.disbursements += tx.amount || 0;
+    });
+    const ohWrap = $('fee-oh-wrap');
+    if (ohWrap) ohWrap.hidden = !(sch && sch.unsoldRealtyRate);
+    const realty = ohWrap && !$('fee-oh-wrap').hidden && $('fee-oh-realty').checked;
+    const r = calculateStatutoryFee(e.state, value, { income: flows.income, disbursements: flows.disbursements, unsoldRealty: !!realty });
+    const stEl = $('fee-statute'), amtEl = $('fee-amount'), noteEl = $('fee-note'), btn = $('btn-fee-record');
+    if (sch) stEl.textContent = '· (' + sch.statute + ')';
+    else stEl.textContent = '';
+    if (r.reasonable) {
+      amtEl.textContent = '— set by court —';
+      noteEl.textContent = r.basisNote;
+      noteEl.className = 'fee-note-warn';
+      btn.disabled = true;
+    } else {
+      amtEl.textContent = fmtMoney(r.fee);
+      const flowsBasis = sch && sch.basis === 'receipts_and_disbursements';
+      noteEl.textContent = r.basisNote || ('Based on ' + (flowsBasis ? 'money received and paid out (from your ledger)' : fmtMoney(value) + ' probate assets at date-of-death value.'));
+      noteEl.className = flowsBasis ? 'fee-note-warn' : 'hintfield';
+      btn.disabled = false;
+    }
+    // remember last computed fee for record
+    $('fee-panel').dataset.fee = String(r.fee || '');
+    $('fee-panel').dataset.statute = r.statute || '';
+  }
+  $('fee-oh-realty') && $('fee-oh-realty').addEventListener('change', renderFee);
+  $('btn-fee-record') && $('btn-fee-record').addEventListener('click', () => {
+    const e = store.getActive();
+    const panel = $('fee-panel');
+    const fee = parseFloat(panel.dataset.fee);
+    if (!e || !fee || fee <= 0) return;
+    const isOH = e.state === 'OH';
+    const desc = 'Executor commission per ' + ((FEE_SCHEDULES[e.state] || {}).statute || 'state statute');
+    const res = store.addTx(e.id, { kind: 'money_out', date: new Date().toISOString().slice(0,10),
+      amount: fee, account: 'principal', description: desc, payee: 'Executor (self)' });
+    if (res.ok) toast('Commission of ' + fmtMoney(fee) + ' recorded in the Ledger.', false);
   });
 
   // ---- create empty → auto-open create form ----
@@ -899,6 +949,7 @@
     els.counts.ledger.hidden = !txs; els.counts.ledger.textContent = txs;
     maybeShowBanner();
     fillForm();
+    renderFee();  // D11
   }
 
   // ---- init: ?sample=1 → D7 sample module (noop today) ----

@@ -202,6 +202,9 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 .doc-total[hidden]{display:none!important}  /* hidden must beat display:flex (csvtojson Day-1 lesson) */
 
 .doc-row.total{font-weight:700;border-top:2px solid #1A1A1A;margin-top:6px;padding-top:8px}
+
+.fee-row b{font-family:'Inter',sans-serif}
+.fee-note-warn{color:#8A5A00}
 </style>
 </head>
 <body>
@@ -292,6 +295,21 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
         <button type="button" class="btn btn-ghost" id="btn-delete-estate" hidden>Delete this estate</button>
       </div>
     </form>
+    <!-- D11: statutory fee module -->
+    <div class="exp-card" id="fee-panel" hidden style="margin-top:18px">
+      <h3>My executor fee <span id="fee-statute" style="font-weight:500;color:#5A5F6A;font-size:13px"></span></h3>
+      <p style="font-size:14.5px;color:#464B56" id="fee-note"></p>
+      <div class="fee-row" style="display:flex;align-items:baseline;gap:12px;margin-bottom:12px">
+        <span style="font-size:13px;color:#5A5F6A">Statutory fee:</span>
+        <b id="fee-amount" style="font-size:22px;color:var(--navy)">—</b>
+      </div>
+      <label style="display:flex;gap:10px;align-items:center;font-size:14px;margin-bottom:12px" id="fee-oh-wrap" hidden>
+        <input type="checkbox" id="fee-oh-realty">
+        <span>Estate includes unsold real property (+1%)</span>
+      </label>
+      <button class="btn btn-navy" id="btn-fee-record" style="padding:10px 22px">Record commission as estate expense</button>
+      <div class="tiny-hint" style="margin-top:8px">This adds a Principal disbursement to the Ledger (visible in the Account report).</div>
+    </div>
   </div>
 </div>
 
@@ -670,6 +688,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 </div>
 
 <script src="js/core.js"></script>
+<script src="js/fee-schedules.js"></script>
 <script src="js/sample-estate.js"></script>
 <script src="js/app.js?v=2"></script>
 <div class="toasts" id="toasts"></div>
