@@ -130,6 +130,67 @@
       return Object.values(this.state.estates).sort((a, b) =>
         (b.createdAt || '').localeCompare(a.createdAt || ''));
     }
+  // ---- D6: export/import/CSV ----
+  exportState() {
+    return JSON.stringify(this.state, null, 2);
+  }
+  importState(jsonString) {
+    let parsed;
+    try { parsed = JSON.parse(jsonString); } catch (e) { return { ok: false, errors: 'Not valid JSON' }; }
+    if (!parsed || typeof parsed !== 'object') return { ok: false, errors: 'Not a JSON object' };
+    if (!('estates' in parsed) || typeof parsed.estates !== 'object') return { ok: false, errors: 'Missing estates' };
+    if (!('version' in parsed)) parsed.version = 1;
+    if (typeof parsed.version !== 'number') return { ok: false, errors: 'Bad version' };
+    this.state = parsed;
+    this.save();
+    return { ok: true };
+  }
+  csvReport(estateId) {
+    const repo = this.buildAccountReport(estateId);
+    if (!repo) return null;
+    const q = (v) => { const s = String(v == null ? '' : v); return (/[",\n]/.test(s)) ? '"' + s.replace(/"/g, '""') + '"' : s; };
+    const L = [];
+    L.push('Summary of Account');
+    L.push('Estate of,' + q(repo.estate.decedent || ''));
+    L.push('Case number,' + q(repo.estate.caseNumber));
+    L.push('');
+    L.push('CHARGES,Amount');
+    L.push('Inventory at date of death,' + repo.charges.inventory);
+    L.push('Receipts Principal,' + repo.charges.receiptsPrincipal);
+    L.push('Receipts Income,' + repo.charges.receiptsIncome);
+    L.push('Gains on sales,' + repo.charges.gains);
+    L.push('TOTAL CHARGES,' + repo.totals.charges);
+    L.push('');
+    L.push('CREDITS,Amount');
+    L.push('Disbursements Principal,' + repo.credits.disbursementsPrincipal);
+    L.push('Disbursements Income,' + repo.credits.disbursementsIncome);
+    L.push('Losses on sales,' + repo.credits.losses);
+    L.push('Distributions,' + repo.credits.distributions);
+    L.push('Property on hand,' + repo.credits.assetsOnHand);
+    L.push('TOTAL CREDITS,' + repo.totals.credits);
+    L.push('');
+    L.push('Schedule of Receipts');
+    L.push('Date,Description,Account,Amount');
+    repo.scheduleReceipts.forEach(r => L.push([r.date, q(r.description), r.account, r.amount].join(',')));
+    L.push('');
+    L.push('Schedule of Disbursements');
+    L.push('Date,Description,Payee,Account,Amount');
+    repo.scheduleDisbursements.forEach(d => L.push([d.date, q(d.description), q(d.payee), d.account, d.amount].join(',')));
+    L.push('');
+    L.push('Schedule of Distributions');
+    L.push('Date,Beneficiary,Description,Amount');
+    repo.scheduleDistributions.forEach(d => L.push([d.date, q(d.beneficiary), q(d.description), d.amount].join(',')));
+    L.push('');
+    L.push('Schedule of Sales');
+    L.push('Date,Asset,DOD value,Net proceeds,Direction,Gain/Loss');
+    const estate = this.state.estates[estateId];
+    repo.scheduleSales.forEach(s0 => {
+      const a = (estate.assets || []).find(x => x.id === s0.assetId);
+      L.push([s0.date, q(a ? a.name : 'asset'), s0.dodValue, s0.netProceeds, s0.direction, s0.gainOrLoss].join(','));
+    });
+    return L.join('\n');
+  }
+
   // ---- D2: Assets ----
   addAsset(estateId, fields) {
     const estate = this.state.estates[estateId];

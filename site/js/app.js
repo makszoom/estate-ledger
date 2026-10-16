@@ -58,7 +58,10 @@
     schedRecv: $('sched-recv'), schedDisb: $('sched-disb'), schedDist: $('sched-dist'),
     schedSales: $('sched-sales'), schedSalesWrap: $('sched-sales-wrap'),
     rptNonP: $('rpt-nonprobate'), nonPList: $('nonprobate-list'),
-    btnPrint: $('btn-print-report'), btnCsv: $('btn-csv-report')
+    btnPrint: $('btn-print-report'), btnCsv: $('btn-csv-report'),
+    // D6 export
+    jsonDl: $('btn-json-download'), jsonUp: $('btn-json-upload'), restNote: $('restore-note'),
+    csvTotals: $('btn-csv-totals'), csvAssets: $('btn-csv-assets'), csvLedgerBtn: $('btn-csv-ledger')
   };
   let editingId = null;
   let deletingId = null;
@@ -698,6 +701,91 @@
     a.download = 'summary-of-account-' + (repo.estate.decedent || '').replace(/\W+/g, '-').toLowerCase() + '.csv';
     a.href = URL.createObjectURL(blob); a.click(); URL.revokeObjectURL(a.href);
   });
+
+  // ---- D6: backup/export handlers ----
+  function downloadFile(name, content, mime) {
+    const blob = new Blob([content], { type: mime });
+    const a = document.createElement('a');
+    a.download = name;
+    a.href = URL.createObjectURL(blob);
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+  const estateSlug = () => {
+    const e = store.getActive();
+    return ((e && e.decedent) || 'estate').replace(/\W+/g, '-').toLowerCase();
+  };
+
+  els.jsonDl.addEventListener('click', () => {
+    downloadFile(`estate-ledger-backup-${estateSlug()}-${new Date().toISOString().slice(0, 10)}.json`,
+      store.exportState(), 'application/json');
+    const e = store.getActive();
+    if (e) e.lastBackupReminder = new Date().toISOString().slice(0, 10);
+    store.save(); els.banner.classList.remove('show');
+  });
+
+  els.jsonUp.addEventListener('click', () => {
+    const inp = document.createElement('input');
+    inp.type = 'file'; inp.accept = '.json,application/json';
+    inp.onchange = async () => {
+      const f = inp.files[0];
+      if (!f) return;
+      try {
+        const txt = await f.text();
+        const r = store.importState(txt);
+        if (!r.ok) { els.restNote.hidden = false; els.restNote.style.color = 'var(--red)';
+          els.restNote.textContent = 'Could not restore: ' + r.errors; return; }
+        editingId = store.state.activeEstateId;
+        els.restNote.hidden = false; els.restNote.style.color = 'var(--green)';
+        els.restNote.textContent = 'Backup restored: ' + store.listEstates().length + ' estate(s).';
+        renderSwitcher(); fillForm(); render();
+      } catch (e) {
+        els.restNote.hidden = false; els.restNote.style.color = 'var(--red)';
+        els.restNote.textContent = 'Could not read the file.';
+      }
+    };
+    inp.click();
+  });
+
+  els.csvTotals.addEventListener('click', () => {
+    const estateId = store.state.activeEstateId;
+    if (!estateId) return;
+    const csv = store.csvReport(estateId);
+    if (csv) downloadFile(`summary-of-account-${estateSlug()}.csv`, csv, 'text/csv');
+  });
+
+  els.csvAssets.addEventListener('click', () => {
+    const estateId = store.state.activeEstateId;
+    if (!estateId) return;
+    const { ASSET_CLASS_LABELS } = window.EstateLedgerCore;
+    const q = v => (/[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v);
+    const L = ['Name,Class,DOD value,In probate?,Value source,Reference,Sold'];
+    store.listAssets(estateId).forEach(a => {
+      L.push([q(a.name), ASSET_CLASS_LABELS[a.assetClass] || a.assetClass,
+        a.dodValue == null ? '' : a.dodValue, a.outsideProbate, a.valuationSource || '',
+        q(a.reference || ''), a.sold ? 'yes' : 'no'].join(','));
+    });
+    downloadFile(`assets-${estateSlug()}.csv`, L.join('\n'), 'text/csv');
+  });
+
+  els.csvLedgerBtn.addEventListener('click', () => {
+    const estateId = store.state.activeEstateId;
+    if (!estateId) return;
+    const q = v => (/[",\n]/.test(String(v)) ? '"' + String(v).replace(/"/g, '""') + '"' : v);
+    const L = ['Date,Type,Account,Description,Payee/Beneficiary,Amount,CheckNo,Reference'];
+    store.listTx(estateId).forEach(x => {
+      L.push([x.date, x.kind, x.account, q(x.description), q(x.payee || x.beneficiary || ''),
+        x.amount, x.checkNo || '', q(x.reference || '')].join(','));
+    });
+    downloadFile(`ledger-${estateSlug()}.csv`, L.join('\n'), 'text/csv');
+  });
+
+  // goto tab from hint links
+  document.querySelectorAll('[data-goto-tab]').forEach(a => a.addEventListener('click', (ev) => {
+    ev.preventDefault();
+    const tab = document.querySelector(`.tab[data-tab="${a.dataset.gotoTab}"]`);
+    if (tab) tab.click();
+  }));
 
   // ---- render (tab counts + panels) ----
   function render() {
