@@ -22,6 +22,7 @@
         global.EstateLedgerCore.emptyEstateFields(), {
         id: eid,
         decedent: 'Jane E. Sample (fictional)',
+      accountingBasis: 'carry',
         caseNumber: 'SAMPLE-114',
         state: 'CA',
         role: 'executor',
