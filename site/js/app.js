@@ -66,6 +66,18 @@
   let editingId = null;
   let deletingId = null;
 
+  // ---- toast helper (D7) ----
+  function toast(msg, warn) {
+    const box = document.getElementById('toasts');
+    if (!box) return;
+    const d = document.createElement('div');
+    d.className = 'toast' + (warn ? ' warn' : '');
+    d.textContent = msg;
+    box.appendChild(d);
+    setTimeout(() => { d.style.opacity = '0'; d.style.transition = 'opacity .4s'; }, 2200);
+    setTimeout(() => d.remove(), 2700);
+  }
+
   // ---- state select options ----
   US_STATES.forEach(s => {
     const o = document.createElement('option');
@@ -200,10 +212,37 @@
     if (!window.EstateLedgerSample) { /* sample module lands in D7; no-op for now */ }
   });
 
+  // ---- SAMPLE-режим маркер ----
+  function maybeSampleBanner() {
+    const e = store.getActive();
+    const b = els.banner;
+    if (e && e.sample) {
+      b.classList.add('show');
+      b.style.background = '#E8EEF8'; b.style.color = 'var(--navy)';
+      b.innerHTML = '<b>SAMPLE estate</b> — fictional data you can freely explore. Everything you do here goes to the sample (not your real records). ' +
+        '<button class="btn btn-ghost" style="padding:6px 14px;font-size:13px;margin-left:12px" id="sb-start-real">Start your own estate</button>' +
+        '<button class="btn" style="padding:6px 14px;font-size:13px;background:transparent;color:var(--navy)" id="sb-dismiss">Dismiss</button>';
+      $('sb-start-real').onclick = () => {
+        window.EstateLedgerSample && window.EstateLedgerSample.uninstall(store);
+        b.classList.remove('show'); b.style.background = ''; b.style.color = '';
+        editingId = null;
+        toast('Sample removed — create your first estate now.');
+        renderSwitcher(); render();
+        document.querySelector('[data-tab=setup]').click();
+        $('btn-create-first').click();
+      };
+      $('sb-dismiss').onclick = () => { b.classList.remove('show'); b.style.background=''; b.style.color=''; };
+      return true;
+    }
+    b.style.background = ''; b.style.color = '';
+    return false;
+  }
+
   // ---- backup banner: weekly reminder ----
   function maybeShowBanner() {
     const e = store.getActive();
     if (!e) return;
+    if (maybeSampleBanner()) return;
     const last = e.lastBackupReminder || '';
     const tooSoon = last && Date.now() - new Date(last).getTime() < 7 * 864e5;
     els.banner.classList.toggle('show', !tooSoon);
@@ -288,6 +327,7 @@
     resetAssetForm();  // сброс ДО feedback: editingAssetId уже null
     els.aSave.textContent = wasEdit ? 'Updated ✓' : 'Added ✓';
     setTimeout(() => { els.aSave.textContent = 'Add asset'; }, 1100);
+    toast(wasEdit ? 'Asset updated.' : 'Asset added to the inventory.');
     render();
   });
 
@@ -516,6 +556,7 @@
     resetTxForm();
     els.tSave.textContent = wasEdit ? 'Updated ✓' : 'Added ✓';
     setTimeout(() => { els.tSave.textContent = 'Add transaction'; }, 1100);
+    toast(wasEdit ? 'Transaction updated.' : 'Transaction recorded.');
     render();
   });
 
@@ -806,7 +847,8 @@
   // ---- init: ?sample=1 → D7 sample module (noop today) ----
   const params = new URLSearchParams(location.search);
   if (params.get('sample') === '1' && window.EstateLedgerSample) {
-    window.EstateLedgerSample.install(store);
+    const si = window.EstateLedgerSample.install(store);
+    window.__sampleInstalled = !!(si && si.ok);
   }
   editingId = store.state.activeEstateId;
   renderSwitcher();
