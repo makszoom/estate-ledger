@@ -147,10 +147,55 @@
     getActive() {
       return this.state.estates[this.state.activeEstateId] || null;
     }
-    listEstates() {
-      return Object.values(this.state.estates).sort((a, b) =>
-        (b.createdAt || '').localeCompare(a.createdAt || ''));
+    listEstates(includeArchived) {
+      return Object.values(this.state.estates)
+        .filter(e => includeArchived || !e.archived)
+        .sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
     }
+    /** D18: archive / unarchive — soft-delete for professional multi-estate view */
+    archiveEstate(id) {
+      const e = this.state.estates[id];
+      if (!e) return { ok: false, errors: { general: 'Estate not found' } };
+      e.archived = true;
+      if (this.state.activeEstateId === id) {
+        const rest = Object.values(this.state.estates).find(x => !x.archived && x.id !== id);
+        this.state.activeEstateId = rest ? rest.id : null;
+      }
+      this.save();
+      return { ok: true };
+    }
+    unarchiveEstate(id) {
+      const e = this.state.estates[id];
+      if (!e) return { ok: false, errors: { general: 'Estate not found' } };
+      e.archived = false;
+      this.save();
+      return { ok: true };
+    }
+  /** D18: multi-estate dashboard rows (pure data; UI renders) */
+  buildDash() {
+    const today = new Date();
+    return Object.values(this.state.estates).map(e => {
+      const dod = e.dateOfDeath ? new Date(e.dateOfDeath + 'T00:00:00') : null;
+      const days = dod && !isNaN(dod) ? Math.floor((today - dod) / 86400000) : null;
+      const txs = e.transactions || [];
+      const rep = this.buildAccountReport(e.id);
+      // next action from red flags (first meaningful)
+      let nextAction = '';
+      if (rep) {
+        const f = (rep.redFlags || [])[0];
+        nextAction = f ? f.message : 'Ready for the final account';
+      } else nextAction = 'Setup incomplete';
+      return {
+        id: e.id, decedent: e.decedent, caseNumber: e.caseNumber || '',
+        state: e.state || '', basis: e.accountingBasis || 'standard',
+        daysSinceDOD: days, assetsCount: (e.assets || []).length,
+        txCount: txs.length, balanced: rep ? !!rep.balanced : false,
+        reimbursablePending: Math.round(txs.filter(x => x.kind === 'reimbursable').reduce((s, x) => s + (x.amount || 0), 0) * 100) / 100,
+        archived: !!e.archived, nextAction
+      };
+    });
+  }
+
   // ---- D6: export/import/CSV ----
   exportState() {
     return JSON.stringify(this.state, null, 2);
