@@ -228,6 +228,18 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 
 .ws-shelved{display:none!important}
 @keyframes wsIn{to{opacity:1;transform:translateY(0)}}
+
+/* D18 dash */
+.dash-card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:14px;display:grid;grid-template-columns:2fr 1fr 1fr 1.4fr;gap:8px 18px;align-items:center}
+.dash-card .h-name{font-weight:700;font-size:16.5px}
+.dash-card .h-sub{font-size:13px;color:#5A5F6A}
+.dash-card .stat{text-align:right}
+.dash-card .stat b{font-size:15px;display:block}
+.dash-card .stat span{font-size:12px;color:#5A5F6A}
+.dash-card .next{font-size:13px;color:#464B56;grid-column:1/-1;background:#F6F6F2;border-radius:8px;padding:8px 12px}
+.dash-card.archived{opacity:.55}
+.dash-actions{display:flex;gap:8px;grid-column:1/-1;margin-top:4px}
+@media(max-width:700px){.dash-card{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
@@ -238,6 +250,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
   </div>
   <div class="spacer"></div>
   <a class="tl" href="#" id="backup-link">Backup data</a>
+  <a class="tl" href="#" id="dash-link" hidden>Dashboard</a>
 </div>
 
 <div class="banner" id="backup-banner">
@@ -348,6 +361,17 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
   <div id="ws-body" class="court-doc"></div>
 </div>
 
+<!-- ============ D18: MULTI-ESTATE DASHBOARD ============ -->
+<div class="panel" id="panel-dash" hidden>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h2 style="margin:0">Dashboard — all estates</h2>
+    <label style="display:flex;gap:8px;align-items:center;font-size:13.5px;cursor:pointer">
+      <input type="checkbox" id="dash-show-archived" style="width:16px;height:16px;accent-color:var(--navy)">
+      <span>Show archived</span>
+    </label>
+  </div>
+  <div id="dash-rows"></div>
+</div>
 <div class="panel" id="panel-assets">
   <h2>Asset Inventory</h2>
   <p class="hint">List every asset the estate controls, at its <b>date-of-death value</b> — that date is the valuation standard courts expect. Assets that pass outside probate (life insurance with a named beneficiary, TOD accounts) are tracked separately.</p>
