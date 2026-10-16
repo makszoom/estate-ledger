@@ -1,7 +1,7 @@
 ---
 name: estate-ledger
-version: 1.0.0
-updated: 2026-10-15
+version: 2.0.0-spec
+updated: 2026-10-17
 ---
 
 # AGENTS.md — Estate Ledger
@@ -12,42 +12,47 @@ updated: 2026-10-15
 
 | Key | Value |
 |-----|-------|
-| Домен (план) | https://estateledger.app |
-| Repo (план) | makszoom/estate-ledger |
-| Hosting | GitHub Pages + Cloudflare DNS |
-| Монетизация | free-first → AdSense (лендинг/education при ≥5K pv/мес) + donate USDT (v1.1) |
+| Live URL (github.io-фаза) | **https://makszoom.github.io/estate-ledger/** (LIVE 17.10, noindex до домена) |
+| Домен (план, отложен Максом 17.10) | https://estateledger.app |
+| Repo (fact) | **makszoom/estate-ledger** (создан 17.10 через GitHub API, Pages main/ enabled) |
+| Hosting | GitHub Pages (13 файлов, deploy = Python requests + REST API, PAT из ~/Projects/csvtojson/.env) |
+| Монетизация | free-first → AdSense (лендинг/education при ≥5K pv/мес) + donate USDT modal (адрес ждёт Макса) |
 | GSC | pending (после домена) |
-| Analytics | Cloudflare Web Analytics (без куки, YMYL-clean) |
+| Analytics | Cloudflare Web Analytics (без куки, YMYL-clean) — пока НЕ подключен |
 | Проект-папка | ~/Projects/estate-ledger |
 
 ## Architecture (план MVP)
 
 ```
 estate-ledger/
-├── PLAN-DETAILED.md          # Подробный план (источник решений)
-├── PLAN.md                   # Создаётся при MVP-старте (summary)
+├── PLAN-DETAILED.md          # Подробный план v1 (источник решений v1)
 ├── docs/
 │   ├── COMPETITIVE-ANALYSIS.md  # Ресёрч конкурентов (15.10, живая проверка)
-│   ├── LAUNCH-CHECKLIST.md      # (создать при deploy)
-│   └── landing/                  # workDir лендинга по landing-production skill
+│   ├── ROADMAP.md               # ★ v2/v3 решение: дата Д90=2027-01-15, kill-условия, триггеры
+│   ├── V2-SPEC.md               # ★ v2 полная спека (§0 self-audit 12 gaps) — источник решений v2
+│   ├── LAUNCH-CHECKLIST.md      # (создать при deploy домена)
+│   └── landing/
 │       ├── landing.json          # журнал решений лендинга
-│       ├── layout/               # ImageGen-макеты + PROMPTS.md + sections/
+│       ├── layout/               # ImageGen-макеты (hero-v6 approved) + PROMPTS.md
+│       ├── page-template.html    # ★ переиспользуемый шаблон SEO-страниц (D8)
 │       └── assets/
-├── site/                     # корень деплоя (GitHub Pages)
-│   ├── index.html            # лендинг
-│   ├── app.html              # сам инструмент (единственная страница-приложение)
+├── site/                     # корень деплоя (GitHub Pages, LIVE)
+│   ├── index.html            # лендинг (+guides-block, donate-modal, "Why is it free?" fix)
+│   ├── app.html              # сам инструмент (6 вкладок; ЕДИНСТВЕННАЯ страница-приложение)
 │   ├── estate-inventory-template.html      # SEO 1
 │   ├── executor-accounting-spreadsheet.html # SEO 2
 │   ├── final-accounting-probate.html        # SEO 3
 │   ├── receipts-disbursements-schedule.html # SEO 4
-│   ├── probate-accounting.html              # SEO 5 (education-хаб)
-│   ├── executor-fee-calculator.html         # SEO 6 (v2-вход, см. §V2)
+│   ├── probate-accounting.html              # SEO 5 (education-хаб, глоссарий, state notes)
 │   ├── privacy.html
-│   ├── about.html
+│   ├── sitemap.xml           # github.io canonical (сменить при домене)
+│   ├── robots.txt
 │   ├── css/style.css          # Trust Legal палитра + Apple Design CSS
-│   ├── js/app.js              # роутинг-модули (setup/assets/ledger/report/export)
-│   └── js/sample-estate.js    # fictional demo data (конверсия лендинга)
-├── scripts/                   # деплой-скрипты (паттерн csv-to-json/scripts/)
+│   ├── js/core.js             # ★ вся логика (649 строк): Store, assets, tx, sales, report, export
+│   ├── js/app.js              # UI glue (tabs, toasts, sample-banner)
+│   └── js/sample-estate.js    # Jane E. Sample demo (?sample=1, idempotent)
+├── tests/                     # ★ 219 тестов: 6 unit-файлов + e2e-day1..7 (CDP port 9333)
+├── scripts/                   # деплой-скрипты
 └── .env                       # секреты (НЕ в git)
 ```
 
@@ -108,29 +113,33 @@ estate-ledger/
 
 | Component | Status |
 |-----------|--------|
-| План + конкурентный анализ | ✅ 15.10 (commit 79dc072) |
-| AGENTS.md документация по паттерну pdf-merge | ✅ 15.10 (commit 35dfd84) |
-| landing.json (журнал решений лендинга) | ✅ 15.10 (commit 35dfd84) — 7 секций, 2 ассета, все copy |
-| Ниша найдена кроном v3 №6 | ✅ 15.10 ⭐⭐⭐⭐ |
-| Gap подтверждён (LegatePro живьём) | ✅ 15.10: free НЕТ вообще |
-| Скилл landing-production (метод сборки лендинга) | ✅ создан 15.10 |
-| ImageGen-макет лендинга (Phase 1) | ⏳ следующий шаг → approval Макса |
-| Домен estateledger.app | ⏳ ПОСЛЕ готового сайта (решение Макса 15.10: сначала github.io) |
-| Лендинг (landing.json + макет) | ⏳ следующий шаг |
-| MVP модули E/A/B/C/D/P/S | ❌ не начато |
-| SEO-страницы + education | ❌ после MVP |
-| GSC + sitemap | ❌ после домена |
-| AdSense | ❌ после 5K pv (реалистично 8-12 недель post-launch) |
+| План v1 + конкурентный анализ | ✅ 15.10 (commit 79dc072) |
+| landing.json + hero-v6 макет (approved) | ✅ 15.10 |
+| MVP модули E/A/B/C/D/P/S (Дни 1-7) | ✅ 16-17.10 — **219 тестов PASS** (99 unit + 118 e2e) |
+| SEO 5 страниц + privacy + sitemap/robots (Д8) | ✅ 17.10 (schema FAQPage, noindex) |
+| **DEPLOY: GitHub Pages LIVE** | ✅ 17.10 (commit eea4c00) — 13 файлов, все URL 200 OK, live E2E 20/20 |
+| Fix: compare-секция «tariff look» | ✅ 17.10 (0b43915) — «Why is it free?» + EstateExec anonymized |
+| Fix CRITICAL: absolute hrefs → 404 | ✅ 17.10 (a8c8d82) — 10 линков в index.html + ../index.html в app.html; full link-crawl PASS |
+| docs/ROADMAP.md (v2 решение, kill) | ✅ 17.10 (0821269) |
+| docs/V2-SPEC.md (+§0 self-audit 12 gaps) | ✅ 17.10 (b3791ad → 35c369d) |
+| **v2 разработка (Д9-Д20)** | ⏳ NEXT — старт по «давай Д9»; порядок: миграция v1→v2 → carry → fees → CSV → worksheet → dash |
+| Домен estateledger.app | ⏸ ОТЛОЖЕН Максом 17.10 («давай отложим») |
+| USDT-кошелёк donate | ⏸ ждёт адрес от Макса (placeholder в модалке) |
+| GSC / AdSense / Reddit-FB посты | ⏸ после домена / 5K pv / руками Макса |
 
-## Priorities (порядок работ, решено с Максом 15.10)
+## V2 Development Plan (см. docs/V2-SPEC.md — полный)
 
-1. **День 0:** landing.json (✅ выполнено) + ImageGen-макет лендинга → approval Макса. **Домен НЕ покупаем до готового сайта** (Zuev: нулевые затраты до продакшена; ogfy/imgtopdf живут на github.io)
-2. **День 1-4:** MVP-модули (код не зависит от домена)
-3. **День 5:** лендинг по утверждённому макету + Sample Estate
-4. **День 6:** deploy на GitHub Pages (makszoom.github.io/estate-ledger) + donate-кнопка USDT
-5. **День 7-14:** 6 SEO страниц + 2-3 education-гайда + Reddit/FB посты
-6. **Позже, когда сайт готов:** покупка estateledger.app → DNS/CNAME → GSC → sitemap → заявка AdSense при трафике
-7. **Indexing-гигиена:** на github.io-фазе `<meta name="robots" content="noindex">` → при переходе на домен убрать → чистая индексация с кастомного домена без каннибализации/301-потерь
+| День | Фича | Суть |
+|---|---|---|
+| Д9 | Миграция v1→v2 + carry core | state.version migration + reportCarry (charges/credits, proceeds В receipts) + 18 unit |
+| Д10 | Carry UI | basis-switch в Setup, confirm-modal, badge, sample carry-demo + 20 e2e |
+| Д11-13 | Fee calculator | FEE_SCHEDULES 15 штатов (CA §10810 gross-probate basis!) + «My fee» в app + SEO-лендинг |
+| Д14-16 | Bank CSV import | PapaParse, mapping, accept/modify/reject, dedupe fingerprint, quota guard |
+| Д17 | CA court worksheet | GC-405 companion (⚠ GC-405 = conservatorship, основной CA-путь = carry Ф1) |
+| Д18 | Multi-estate dash | dash-таблица + archive |
+| Д19-20 | Полировка + sitemap-обновление | полный регресс каждый день |
+
+**Правило Д9-Д20:** каждый день unit+E2E+скрин; полный suite-регресс; деплой на Pages после каждого дня (тот же API-паттерн).
 
 
 ## Ad Placement Map (монетизация, заранее решено)
@@ -154,6 +163,7 @@ estate-ledger/
 - Прогноз дохода: legal+US in-content display RPM $15-30 → при 5K pv = $75-150/мес; scaling с education-гайдами (10-20 страниц: $200-600/мес при 20-30K pv)
 - GDPR (EU-трафик): Google Consent Mode v2 в consent.js (~30 строк), ад-скрипты после consent
 - AdSense-заявка: НЕ раньше стабильных 5K pv/мес 2 месяца подряд; approval ~2 нед
+- **v2-правило (17.10): новые SEO-страницы (executor-fee-calculator) проектируются СРАЗУ с пустыми ad-placeholder-комментариями (<!-- ADSLOT-TOP -->) — включение рекламы позже = вставка 1 блока, не редизайн; noindex до домена, sitemap-обновление в Д19-20**
 
 ## Kill Criteria (Зуев-стопы)
 
