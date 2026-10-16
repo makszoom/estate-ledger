@@ -8,6 +8,53 @@
 
 ---
 
+
+---
+
+# §0. АУДИТ СПЕКИ (self-check 17.10, по запросу Макса «проверь себя»)
+
+Сверка с реальным кодом core.js (649 строк) нашла 12 уточнений. Все внесены:
+
+1. **Миграция данных v1→v2 (КРИТИЧНО):** у существующих estates НЕ будет поля
+   `accountingBasis`. Спека: при load() если `state.version === 1` → миграция
+   `version = 2`, каждому estate добавляется `accountingBasis: 'standard'`.
+   ImportState из старого бэкапа — та же миграция. Тест: restore v1-бэкапа в v2-код.
+2. **Archived estates и backup:** exportState сериализует ВЕСЬ state (вкл. archived,
+   поле `archived: true` в estate). Restore восстанавливает флаг. Тест в e2e-day13.
+3. **AdSense-слоты на новых SEO-страницах:** executor-fee-calculator.html проектируется
+   СРАЗУ с ad-placeholder-комментарием (<!-- ADSLOT-TOP -->), физически пустым —
+   включение позже = вставка 1 блока, не редизайн. Правило «не в app/print» неизменно.
+4. **noindex на новых страницах** до переезда на домен (мета-тег robots, как на всех).
+5. **localStorage-квота (5MB):** импорт 3000 строк ≈ 600KB JSON — безопасно, но:
+   (а) перед bulk-commit считаем размер добавляемого JSON, при подходе к ~4MB —
+   предупреждение «разбей estate / экспортируй архив»; (б) try/catch на setItem
+   с понятным toast «Storage full — export a backup» вместо тихой потери данных.
+6. **PapaParse edge-cases (спека уточнена):** UTF-8 BOM (авто-стрип), quoted fields
+   с запятыми внутри, сепаратор авто-детект (, / ; / tab) по 5 строкам, empty rows skip.
+7. **Ф3 семантика импорта:** из банка приходят ТОЛЬКО money_in/money_out.
+   distribution/reimbursable импортом НЕ создаются никогда (это не банковские движения);
+   если в CSV сумма совпала с distribution — flagged «matches your distribution of MM/DD —
+   mark as already recorded?» (информационный hint, не auto-link).
+8. **CA fee basis → уточнение юрисдикции:** §10810 считает от GROSS probate estate
+   (= инвентарь probate активов по DOD, non-probate/TOD НЕ входят, долги НЕ вычитаются).
+   В app-модуле берём inventoryTotals().probateTotal как базу —  уже реализовано в core.
+   На лендинге юзер вводит gross probate value (hint: «home value WITHOUT mortgage deduction,
+   only assets in probate»).
+9. **Reasonable-compensation states (UX):** если штат отсутствует в FEE_SCHEDULES —
+   показываем панель «Reasonable compensation state: courts typically approve 1.5–5%
+   of the probate estate; check your county's custom». Fee-модуль disables кнопки
+   «record as expense» (нет statutory base → юзер вручную создаёт tx).
+10. **Sample Estate должен демонстрировать carry-режим:** кнопка на лендинге
+   «See the California-format sample» → sample-estate с basis=carry (тот же Jane E.
+    Sample, отчёт в carry-подаче). Демо закрывает оба режима.
+11. **Полный регресс после каждого дня** (не только новые тесты): 219+ тестов гоняются
+    каждый день, новые фичи не ломают старое. Day-затраты +3 мин, риск −90%.
+12. **CSV-report/exportState: поле basis** добавляется в Summary-строку CSV
+    («Accounting basis,carry») — иначе CSV двух режимов неразличимы.
+
+Порядок: миграция (п.1) делается в Д9 ПЕРЕД reportCarry — это пререквизит.
+
+
 # Ф1. CARRY VALUE SWITCH (Standard ↔ Carry)
 
 ## Что делает
@@ -255,7 +302,7 @@ Multi-estate уже сейчас работает в v1 (несколько esta
 | Д19 | Полировка | полный suite прогон, баги, скриншот-ревью всех новых вью |
 | Д20 | Финал | sitemap + новые SEO-страницы в sitemap.xml, версия v2.0 в footer, |
 
-Общая длина: 3-4 недели с тестами (тот же стандарт: каждый день = unit + E2E + скрин).
+Общая длина: 3-4 недели с тестами (каждый день = полный регресс-прогон 219+ тестов, п.11 §0) (тот же стандарт: каждый день = unit + E2E + скрин).
 
 # РИСКИ
 1. **Carry-value логика** — самая сложная (по EstatesExec docs, это другой подход).
