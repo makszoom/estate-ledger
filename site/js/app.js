@@ -322,6 +322,70 @@
     $('import-zone').style.display = '';
   });
 
+
+  // ---- D18: multi-estate dashboard ----
+  function updateDashLink() {
+    const cnt = Object.values(store.state.estates).filter(e => !e.archived).length;
+    const link = $('dash-link');
+    if (link) link.hidden = cnt < 3;  // spec: dashboard at ≥3 estates
+  }
+  function renderDash() {
+    const rows = store.buildDash();
+    const showArchived = $('dash-show-archived') && $('dash-show-archived').checked;
+    const wrap = $('dash-rows');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    rows.filter(r => showArchived || !r.archived).forEach(r => {
+      const card = document.createElement('div');
+      card.className = 'dash-card' + (r.archived ? ' archived' : '');
+      const bal = r.balanced
+        ? '<b style="color:#2D6A4F">Balanced ✓</b><span>account check</span>'
+        : '<b style="color:#B00020">Check needed</b><span>account check</span>';
+      card.innerHTML =
+        '<div><div class="h-name">' + (r.decedent || '—') + (r.archived ? ' · archived' : '') + '</div>' +
+          '<div class="h-sub">' + (r.state || '—') + (r.caseNumber ? ' · ' + r.caseNumber : '') + ' · ' + (r.basis === 'carry' ? 'carry' : 'standard') + '</div></div>' +
+        '<div class="stat"><b>' + (r.daysSinceDOD >= 0 ? r.daysSinceDOD + ' d' : '—') + '</b><span>since death</span></div>' +
+        '<div class="stat"><b>' + r.assetsCount + '</b><span>assets</span></div>' +
+        '<div class="stat">' + bal + '</div>' +
+        '<div class="next"><b>Next:</b> ' + r.nextAction + (r.reimbursablePending > 0 ? ' · Executor unpaid: ' + fmtMoney(r.reimbursablePending) : '') + '</div>' +
+        '<div class="dash-actions">' +
+          '<button class="btn btn-ghost" data-open-estate="' + r.id + '" style="padding:6px 14px">Open</button>' +
+          (r.archived
+            ? '<button class="btn btn-ghost" data-unarchive="' + r.id + '" style="padding:6px 14px">Restore</button>'
+            : '<button class="btn btn-ghost" data-archive="' + r.id + '" style="padding:6px 14px">Archive</button>') +
+        '</div>';
+      wrap.appendChild(card);
+    });
+    // delegated actions
+    wrap.querySelectorAll('[data-open-estate]').forEach(b => b.onclick = () => {
+      store.setActive(b.dataset.openEstate);
+      document.querySelectorAll('.panel.ws-shelved').forEach(x => x.classList.remove('ws-shelved'));
+      $('panel-dash').hidden = true;
+      $('panel-dash').classList.remove('active');
+      document.querySelectorAll('.tab[data-tab=setup]')[0] && document.querySelector('[data-tab=setup]').click();
+      fillForm(); renderSwitcher(); render();
+    });
+    wrap.querySelectorAll('[data-archive]').forEach(b => b.onclick = () => {
+      store.archiveEstate(b.dataset.archive);
+      toast('Estate archived — restore it via Dashboard → Show archived.', false);
+      renderDash(); updateDashLink(); renderSwitcher();
+    });
+    wrap.querySelectorAll('[data-unarchive]').forEach(b => b.onclick = () => {
+      store.unarchiveEstate(b.dataset.unarchive);
+      toast('Estate restored.', false);
+      renderDash(); updateDashLink(); renderSwitcher();
+    });
+  }
+  $('dash-link') && $('dash-link').addEventListener('click', (ev) => {
+    ev.preventDefault();
+    document.querySelectorAll('.panel').forEach(p0 => p0.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    $('panel-dash').hidden = false;
+    $('panel-dash').classList.add('active');
+    renderDash();
+  });
+  $('dash-show-archived') && $('dash-show-archived').addEventListener('change', renderDash);
+
   // ---- D12: bank CSV import ----
   let importDrafts = [];
   const BI = window.EstateLedgerCore.BankImport;
@@ -1076,6 +1140,7 @@
     maybeShowBanner();
     fillForm();
     renderFee();  // D11
+    updateDashLink();  // D18
   }
 
   // ---- init: ?sample=1 → D7 sample module (noop today) ----
