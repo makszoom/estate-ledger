@@ -60,7 +60,7 @@
     return {
       decedent: '', caseNumber: '', state: '', role: 'executor',
       dateOfDeath: '', createdAt: todayISO(), lastBackupReminder: todayISO(),
-      assets: [], transactions: []
+      assets: [], transactions: [], sales: []
     };
   }
 
@@ -156,9 +156,12 @@
     if (!estate) return { ok: false, errors: { general: 'Estate not found' } };
     const idx = (estate.assets || []).findIndex(a => a.id === assetId);
     if (idx === -1) return { ok: false, errors: { general: 'Asset not found' } };
-    const merged = Object.assign({}, estate.assets[idx], fields);
+    const current = estate.assets[idx];
+    const merged = Object.assign({}, current, fields);
     const errs = Store.validateAsset(merged);
     if (Object.keys(errs).length) return { ok: false, errors: errs };
+    if (current.sold && 'dodValue' in fields && merged.dodValue !== current.dodValue)
+      return { ok: false, errors: { general: 'This asset is sold — its date-of-death value is locked into the recorded sale. Undo the sale to change it.' } };
     if ('dodValue' in fields) merged.dodValue = parseMoney(merged.dodValue);
     estate.assets[idx] = merged;
     this.save();
@@ -167,6 +170,9 @@
   deleteAsset(estateId, assetId) {
     const estate = this.state.estates[estateId];
     if (!estate || !estate.assets) return false;
+    const asset = estate.assets.find(a => a.id === assetId);
+    if (!asset) return false;
+    if (asset.sold) return { ok: false, error: 'Undo the sale first — the asset is linked to a recorded sale' };
     const before = estate.assets.length;
     estate.assets = estate.assets.filter(a => a.id !== assetId);
     if (estate.assets.length === before) return false;
@@ -279,6 +285,96 @@
     }
     sums.count = txs.length;
     return sums;
+  }
+
+  // ---- D4: Asset sale (gain/loss) ----
+  recordSale(estateId, assetId, fields) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return { ok: false, errors: { general: 'Estate not found' } };
+    const asset = (estate.assets || []).find(a => a.id === assetId);
+    if (!asset) return { ok: false, errors: { general: 'Asset not found' } };
+    if (asset.sold) return { ok: false, errors: { general: 'Asset is already sold' } };
+    if (asset.outsideProbate === 'unknown')
+      return { ok: false, errors: { general: 'Verify the ownership first — assets marked "verify" cannot be sold through the ledger yet' } };
+    const errs = {};
+    if (!fields || !fields.date) errs.date = 'Sale date is required';
+    else {
+      const d = new Date(fields.date + 'T00:00:00');
+      if (isNaN(d.getTime())) errs.date = 'Valid sale date required';
+      else if (d > new Date()) errs.date = 'Sale date cannot be in the future';
+      else if (estate.dateOfDeath && fields.date < estate.dateOfDeath)
+        errs.date = 'Sale date is before the date of death';
+    }
+    const gross = fields && fields.grossProceeds != null && fields.grossProceeds !== '' ? parseMoney(fields.grossProceeds) : null;
+    const netDirect = fields && fields.netProceeds != null && fields.netProceeds !== '' ? parseMoney(fields.netProceeds) : null;
+    const expenses = fields && fields.saleExpenses != null && fields.saleExpenses !== '' ? parseMoney(fields.saleExpenses) : null;
+    if (gross !== null && netDirect !== null)
+      return { ok: false, errors: { general: 'Enter either gross proceeds (with expenses) or net proceeds — not both' } };
+    let net = netDirect;
+    if (net === null && gross !== null) {
+      if (gross <= 0) errs.proceeds = 'Proceeds must be a positive number';
+      else if (expenses === null) errs.proceeds = 'Enter sale expenses (or 0 if none) to compute net proceeds';
+      else net = round2(gross - expenses);
+    } else if (net !== null && net <= 0) errs.proceeds = 'Proceeds must be a positive number';
+    else if (net === null) errs.proceeds = 'Enter net proceeds (or gross + expenses)';
+    if (Object.keys(errs).length) return { ok: false, errors: errs };
+    const dod = asset.dodValue || 0;
+    const diff = round2(net - dod);
+    const direction = diff > 0 ? 'gain' : diff < 0 ? 'loss' : 'none';
+    const saleId = uid();
+    // Cash tx: proceeds are principal money (sale of an inventoried asset is principal, not income)
+    const tx = {
+      id: uid(), date: fields.date, kind: 'money_in', account: 'principal',
+      amount: net, description: direction === 'none'
+        ? `Net proceeds — sale of ${asset.name}`
+        : `Net proceeds — sale of ${asset.name} (${direction} ${fmtMoney(Math.abs(diff))} vs date-of-death value)`,
+      payee: '', beneficiary: '',
+      reference: (fields.reference || '').trim(),
+      checkNo: '', saleId, createdAt: todayISO()
+    };
+    const sale = {
+      id: saleId, assetId, date: fields.date,
+      grossProceeds: gross, saleExpenses: expenses,
+      expenseDetail: (fields.expenseDetail || '').trim(),
+      netProceeds: net, dodValue: dod,
+      gainOrLoss: Math.abs(diff), direction,
+      txId: tx.id, createdAt: todayISO()
+    };
+    estate.sales = estate.sales || [];
+    estate.sales.push(sale);
+    estate.transactions = estate.transactions || [];
+    estate.transactions.push(tx);
+    asset.sold = true; asset.saleId = saleId; asset.soldDate = fields.date;
+    this.save();
+    return { ok: true, sale, tx };
+  }
+  deleteSale(estateId, saleId) {
+    const estate = this.state.estates[estateId];
+    if (!estate || !estate.sales) return false;
+    const sale = estate.sales.find(s => s.id === saleId);
+    if (!sale) return false;
+    estate.sales = estate.sales.filter(s => s.id !== saleId);
+    estate.transactions = (estate.transactions || []).filter(x => x.saleId !== saleId);
+    const asset = (estate.assets || []).find(a => a.id === sale.assetId);
+    if (asset) { asset.sold = false; delete asset.saleId; }
+    this.save();
+    return true;
+  }
+  listSales(estateId) {
+    const estate = this.state.estates[estateId];
+    return (estate && estate.sales) ? estate.sales : [];
+  }
+  saleTotals(estateId) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return null;
+    const sales = estate.sales || [];
+    let gains = 0, losses = 0, proceeds = 0;
+    for (const s of sales) {
+      if (s.direction === 'gain') gains += s.gainOrLoss;
+      else if (s.direction === 'loss') losses += s.gainOrLoss;
+      proceeds += s.netProceeds || 0;
+    }
+    return { gains: round2(gains), losses: round2(losses), proceeds: round2(proceeds), count: sales.length };
   }
 }
 

@@ -37,7 +37,15 @@
     tTbody: $('tx-tbody'), tEmpty: $('tx-empty'), tWrap: $('tx-table-wrap'),
     gPayee: $('group-payee'), gBenef: $('group-beneficiary'),
     pIn: $('p-in'), pOut: $('p-out'), pDistr: $('p-distr'), pReimb: $('p-reimb'), pCash: $('p-cash'),
-    iIn: $('i-in'), iOut: $('i-out'), iDistr: $('i-distr'), iCash: $('i-cash')
+    iIn: $('i-in'), iOut: $('i-out'), iDistr: $('i-distr'), iCash: $('i-cash'),
+    // D4: sale
+    mSale: $('modal-sale'), saleForm: $('form-sale'), saleTitle: $('sale-title'),
+    saleAssetLine: $('sale-asset-line'),
+    sDate: $('s-date'), sNet: $('s-net'), sGross: $('s-gross'), sExp: $('s-exp'),
+    sExpdet: $('s-expdet'), sRef: $('s-ref'),
+    sgNet: $('sg-net'), sgGross: $('sg-gross'), sgExp: $('sg-exp'), sgExpdet: $('sg-expdet'),
+    sPreview: $('sale-preview'), sErrDate: $('serr-date'), sErrGen: $('serr-general'),
+    sCancel: $('btn-cancel-sale'), sSave: $('btn-confirm-sale')
   };
   let editingId = null;
   let deletingId = null;
@@ -280,11 +288,16 @@
       const flagCls = a.outsideProbate === 'yes' ? 'flag yes' : a.outsideProbate === 'unknown' ? 'flag unknown' : 'flag';
       const flagTxt = a.outsideProbate === 'yes' ? 'outside' : a.outsideProbate === 'unknown' ? 'verify' : 'in probate';
       const val = a.dodValue == null ? '<span class="none">to appraise</span>' : fmtMoney(a.dodValue);
-      tr.innerHTML = `<td><b>${esc(a.name)}</b>${a.reference ? `<div style="font-size:12px;color:var(--gray-text)">${esc(a.reference)}</div>` : ''}</td>` +
+      const soldBadge = a.sold ? '<span class="sold-badge">SOLD</span>' : '';
+      const actions = a.sold
+        ? `<span class="tx-kind k-money_in" style="font-size:11px">sold ${esc(a.soldDate || '')}</span>`
+        : `<button class="link-btn" data-edit="${a.id}">Edit</button><button class="link-btn danger" data-del="${a.id}">Delete</button><button class="link-btn" data-sell="${a.id}" style="color:var(--green)">Sell</button>`;
+      const nameCell = `<b>${esc(a.name)}</b>${soldBadge}${a.reference ? `<div style="font-size:12px;color:var(--gray-text)">${esc(a.reference)}</div>` : ''}`;
+      tr.innerHTML = `<td>${nameCell}</td>` +
         `<td class="aclass">${esc(ASSET_CLASS_LABELS[a.assetClass] || a.assetClass)}</td>` +
         `<td class="r">${val}</td>` +
         `<td><span class="${flagCls}">${flagTxt}</span></td>` +
-        `<td><div class="row-actions"><button class="link-btn" data-edit="${a.id}">Edit</button><button class="link-btn danger" data-del="${a.id}">Delete</button></div></td>`;
+        `<td><div class="row-actions">${actions}</div></td>`;
       els.aTbody.appendChild(tr);
     });
     // totals
@@ -316,13 +329,108 @@
       els.aCancel.hidden = false;
       els.aName.scrollIntoView({ behavior: 'smooth', block: 'center' });
     } else if (delId) {
-      if (store.deleteAsset(estateId, delId)) { if (editingAssetId === delId) resetAssetForm(); render(); }
+      const d = store.deleteAsset(estateId, delId);
+      if (d === true) { if (editingAssetId === delId) resetAssetForm(); render(); }
+      else if (d && d.ok === false) alert(d.error || 'Cannot delete this asset.');
     }
   });
 
   function esc(s) {
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+
+  // ---- D4: sale modal ----
+  let saleAssetId = null;
+  function openSale(aid) {
+    const estateId = store.state.activeEstateId;
+    const a = estateId && store.listAssets(estateId).find(x => x.id === aid);
+    if (!a) return;
+    saleAssetId = aid;
+    els.saleTitle.textContent = 'Record sale — ' + a.name;
+    els.saleAssetLine.innerHTML = `Date-of-death value: <b>${fmtMoney(a.dodValue)}</b> (gain/loss is measured against it)`;
+    els.saleForm.reset();
+    els.sDate.value = new Date().toISOString().slice(0, 10);
+    saleModeSync();
+    els.sPreview.hidden = true;
+    els.sErrDate && showSaleErr('date', null);
+    els.sErrGen.textContent = '';
+    els.mSale.classList.add('open');
+    setTimeout(() => els.sNet.focus(), 250);
+  }
+  function saleModeSync() {
+    const mode = (els.saleForm.querySelector('input[name=s-mode]:checked') || {}).value || 'net';
+    els.sgNet.hidden = mode !== 'net';
+    els.sgGross.hidden = mode !== 'gross';
+    els.sgExp.hidden = mode !== 'gross';
+    els.sgExpdet.hidden = mode !== 'gross';
+  }
+  els.saleForm.addEventListener('change', (ev) => { if (ev.target.name === 's-mode') saleModeSync(); updatePreview(); });
+  els.sGross.addEventListener('input', updatePreview);
+  els.sExp.addEventListener('input', updatePreview);
+  els.sNet.addEventListener('input', updatePreview);
+  function updatePreview() {
+    const mode = (els.saleForm.querySelector('input[name=s-mode]:checked') || {}).value || 'net';
+    const estate = store.getActive();
+    const a = estate && store.listAssets(estate.id).find(x => x.id === saleAssetId);
+    if (!a || mode !== 'gross') { if (mode === 'net') maybePreviewNet(); return; }
+    maybePreviewNet();
+  }
+  function maybePreviewNet() {
+    const estate = store.getActive();
+    const a = estate && store.listAssets(estate.id).find(x => x.id === saleAssetId);
+    if (!a) { els.sPreview.hidden = true; return; }
+    const mode = (els.saleForm.querySelector('input[name=s-mode]:checked') || {}).value || 'net';
+    let net = null;
+    if (mode === 'net' && els.sNet.value.trim()) net = window.EstateLedgerCore.parseMoney(els.sNet.value);
+    if (mode === 'gross' && els.sGross.value.trim() && els.sExp.value.trim()) {
+      const g = window.EstateLedgerCore.parseMoney(els.sGross.value);
+      const x = window.EstateLedgerCore.parseMoney(els.sExp.value);
+      if (g != null && x != null) net = window.EstateLedgerCore.round2(g - x);
+    }
+    if (net == null || net <= 0) { els.sPreview.hidden = true; return; }
+    const dod = a.dodValue || 0;
+    const diff = window.EstateLedgerCore.round2(net - dod);
+    const dir = diff > 0 ? 'gain' : diff < 0 ? 'loss' : 'no gain or loss';
+    els.sPreview.innerHTML = `Net proceeds: <b>${fmtMoney(net)}</b> vs date-of-death value ${fmtMoney(dod)}` +
+      (diff === 0 ? '' : ` → <span class="${diff > 0 ? 'gp' : 'lp'}">${dir} ${fmtMoney(Math.abs(diff))}</span>`);
+    els.sPreview.hidden = false;
+  }
+  function showSaleErr(key, msg) {
+    if (key === 'date') {
+      if (msg) { els.sErrDate.textContent = msg; els.sErrDate.classList.add('show'); }
+      else els.sErrDate.classList.remove('show');
+    }
+  }
+  els.sCancel.addEventListener('click', () => els.mSale.classList.remove('open'));
+  els.mSale.addEventListener('click', (ev) => { if (ev.target === els.mSale) els.mSale.classList.remove('open'); });
+
+  els.saleForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const estateId = store.state.activeEstateId;
+    if (!estateId || !saleAssetId) return;
+    const mode = (els.saleForm.querySelector('input[name=s-mode]:checked') || {}).value || 'net';
+    const fields = {
+      date: els.sDate.value,
+      reference: els.sRef.value,
+      expenseDetail: els.sExpdet.value
+    };
+    if (mode === 'net') fields.netProceeds = els.sNet.value; else { fields.grossProceeds = els.sGross.value; fields.saleExpenses = els.sExp.value; }
+    const res = store.recordSale(estateId, saleAssetId, fields);
+    if (!res.ok) {
+      els.sErrGen.textContent = res.errors.general || res.errors.proceeds || '';
+      if (res.errors.date) showSaleErr('date', res.errors.date);
+      return;
+    }
+    els.mSale.classList.remove('open');
+    render();
+  });
+
+  // Sale click delegation (assets table)
+  window.__origAssetClick = els.aTbody.onclick;
+  els.aTbody.addEventListener('click', (ev) => {
+    const sellId = ev.target.dataset.sell;
+    if (sellId) openSale(sellId);
+  });
 
   // ---- D3: ledger form ----
   const KIND_LABELS = { money_in: 'In', money_out: 'Out', distribution: 'Distribution', reimbursable: 'Reimbursable' };

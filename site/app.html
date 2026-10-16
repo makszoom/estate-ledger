@@ -123,6 +123,13 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 .k-reimbursable{background:#F5EEF8;color:#6B3FA0}
 .tx-sub{font-size:12px;color:var(--gray-text)}
 
+
+/* ===== Sale (D4) ===== */
+.sale-preview{margin-top:14px;background:#F2F4F8;border-radius:8px;padding:14px 16px;font-size:14.5px;line-height:1.7}
+.sale-preview .gp{color:var(--green);font-weight:700}
+.sale-preview .lp{color:var(--red);font-weight:700}
+.sold-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;background:var(--navy);color:#fff;margin-left:6px;vertical-align:middle}
+
 @media(max-width:640px){
   .f-grid{grid-template-columns:1fr}
   .tot-cols{grid-template-columns:1fr}
@@ -387,6 +394,57 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 <div class="panel" id="panel-report"><h2>Summary of Account</h2><p class="hint">Day 5 — charge-and-discharge report.</p></div>
 <!-- ============ EXPORT (D6) ============ -->
 <div class="panel" id="panel-export"><h2>Backup &amp; Export</h2><p class="hint">Day 6 — JSON backup / CSV / print.</p></div>
+
+<!-- Sale modal (D4) -->
+<div class="modal" id="modal-sale" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <h3 id="sale-title">Record sale</h3>
+    <p id="sale-asset-line" style="margin-bottom:14px"></p>
+    <form id="form-sale" novalidate>
+      <div class="f-grid">
+        <div class="f-group">
+          <label for="s-date">Sale date <span class="req">*</span></label>
+          <input type="date" id="s-date">
+          <div class="err" id="serr-date"></div>
+        </div>
+        <div class="f-group">
+          <label>Proceeds</label>
+          <div style="display:flex;gap:10px;align-items:center">
+            <label style="font-weight:400;display:flex;gap:5px;align-items:center;margin:0"><input type="radio" name="s-mode" value="net" checked style="width:auto"> Net proceeds</label>
+            <label style="font-weight:400;display:flex;gap:5px;align-items:center;margin:0"><input type="radio" name="s-mode" value="gross" style="width:auto"> Gross + expenses</label>
+          </div>
+        </div>
+        <div class="f-group" id="sg-net">
+          <label for="s-net">Net proceeds (after expenses) <span class="req">*</span></label>
+          <input id="s-net" inputmode="decimal" placeholder="e.g. 11,500.00">
+        </div>
+        <div class="f-group" id="sg-gross" hidden>
+          <label for="s-gross">Gross proceeds <span class="req">*</span></label>
+          <input id="s-gross" inputmode="decimal" placeholder="e.g. 12,000.00">
+        </div>
+        <div class="f-group" id="sg-exp" hidden>
+          <label for="s-exp">Sale expenses (commissions, closing) <span class="req">*</span></label>
+          <input id="s-exp" inputmode="decimal" placeholder="e.g. 500.00">
+          <div class="hintfield">Used to compute net = gross − expenses.</div>
+        </div>
+        <div class="f-group fg-wide" id="sg-expdet" hidden>
+          <label for="s-expdet">What the expenses were (optional)</label>
+          <input id="s-expdet" maxlength="120" placeholder="e.g. brokerage commission">
+        </div>
+        <div class="f-group fg-wide">
+          <label for="s-ref">Reference (optional)</label>
+          <input id="s-ref" maxlength="80" placeholder="e.g. escrow 2025-03">
+        </div>
+      </div>
+      <div class="sale-preview" id="sale-preview" hidden></div>
+      <div class="err" id="serr-general" style="margin-top:8px"></div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-sale">Cancel</button>
+        <button type="submit" class="btn btn-navy" id="btn-confirm-sale">Record sale</button>
+      </div>
+    </form>
+  </div>
+</div>
 
 <!-- Confirm-delete modal -->
 <div class="modal" id="modal-delete" role="dialog" aria-modal="true">
