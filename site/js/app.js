@@ -27,7 +27,17 @@
     aSave: $('btn-save-asset'), aCancel: $('btn-cancel-asset'),
     aTbody: $('assets-tbody'), aEmpty: $('assets-empty'), aWrap: $('assets-table-wrap'),
     tProbate: $('tot-probate'), tOutside: $('tot-outside'), tOutsideRow: $('tot-outside-row'),
-    tUnRow: $('tot-unknown-row'), tUn: $('tot-unknown')
+    tUnRow: $('tot-unknown-row'), tUn: $('tot-unknown'),
+    // D3: ledger
+    tForm: $('form-tx'), tDate: $('t-date'), tKind: $('t-kind'), tAmount: $('t-amount'),
+    tAcct: $('t-acct'), tDesc: $('t-desc'), tPayee: $('t-payee'), tBenef: $('t-benef'),
+    tRef: $('t-ref'), tErr: { date: $('terr-date'), kind: $('terr-kind'), amount: $('terr-amount'),
+      acct: $('terr-acct'), desc: $('terr-desc'), payee: $('terr-payee'), benef: $('terr-benef') },
+    tkindHint: $('kind-hint'), tSave: $('btn-save-tx'), tCancel: $('btn-cancel-tx'),
+    tTbody: $('tx-tbody'), tEmpty: $('tx-empty'), tWrap: $('tx-table-wrap'),
+    gPayee: $('group-payee'), gBenef: $('group-beneficiary'),
+    pIn: $('p-in'), pOut: $('p-out'), pDistr: $('p-distr'), pReimb: $('p-reimb'), pCash: $('p-cash'),
+    iIn: $('i-in'), iOut: $('i-out'), iDistr: $('i-distr'), iCash: $('i-cash')
   };
   let editingId = null;
   let deletingId = null;
@@ -314,6 +324,133 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  // ---- D3: ledger form ----
+  const KIND_LABELS = { money_in: 'In', money_out: 'Out', distribution: 'Distribution', reimbursable: 'Reimbursable' };
+  const KIND_HINTS = {
+    money_in: 'Estate received money (interest, rent, refund, sale proceeds).',
+    money_out: 'The estate paid a bill, tax, filing fee, or professional.',
+    distribution: 'Money or property delivered to a beneficiary. Record only after it actually happened.',
+    reimbursable: 'You paid personally — tracked as a claim against the estate until the estate repays you.'
+  };
+  let editingTxId = null;
+  function showTxErr(key, msg) {
+    const el = els.tErr[key];
+    if (!el) return;
+    if (msg) { el.textContent = msg; el.classList.add('show'); }
+    else { el.textContent = ''; el.classList.remove('show'); }
+  }
+  function resetTxForm() {
+    editingTxId = null;
+    els.tForm.reset();
+    els.tAcct.value = 'principal';
+    els.gBenef.hidden = true;
+    els.gPayee.style.display = '';
+    els.tkindHint.hidden = true;
+    Object.keys(els.tErr).forEach(k => showTxErr(k, null));
+    els.tSave.textContent = 'Add transaction';
+    els.tCancel.hidden = true;
+  }
+  // kind selector: hint + conditional fields
+  els.tKind.addEventListener('change', () => {
+    const k = els.tKind.value;
+    els.tkindHint.hidden = !k;
+    if (k) els.tkindHint.textContent = KIND_HINTS[k];
+    els.gBenef.hidden = k !== 'distribution';
+    els.gPayee.style.display = (k === 'money_in') ? 'none' : '';
+    if (k === 'reimbursable') els.tPayee.placeholder = 'Who paid? e.g. yourself ("Executor (self)")';
+  });
+
+  els.tCancel.addEventListener('click', resetTxForm);
+
+  els.tForm.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const estateId = store.state.activeEstateId;
+    if (!estateId) return;
+    Object.keys(els.tErr).forEach(k => showTxErr(k, null));
+    const e = store.getActive();
+    const fields = {
+      date: els.tDate.value,
+      kind: els.tKind.value,
+      amount: els.tAmount.value.trim(),
+      account: els.tAcct.value,
+      description: els.tDesc.value,
+      payee: els.tPayee.value,
+      beneficiary: els.tBenef.value,
+      reference: els.tRef.value
+    };
+    const wasEdit = !!editingTxId;
+    const res = wasEdit
+      ? store.updateTx(estateId, editingTxId, fields)
+      : store.addTx(estateId, fields);
+    if (!res.ok) {
+      Object.entries(res.errors).forEach(([k, m]) => {
+        const key = { account: 'acct', beneficiary: 'benef', description: 'desc' }[k] || k;
+        showTxErr(key, m);
+      });
+      return;
+    }
+    resetTxForm();
+    els.tSave.textContent = wasEdit ? 'Updated ✓' : 'Added ✓';
+    setTimeout(() => { els.tSave.textContent = 'Add transaction'; }, 1100);
+    render();
+  });
+
+  function renderLedger() {
+    const estateId = store.state.activeEstateId;
+    if (!estateId) { els.tTbody.innerHTML = ''; els.tEmpty.hidden = false; els.tWrap.hidden = true; els.tForm.style.display = 'none'; return; }
+    els.tForm.style.display = '';
+    const list = store.listTx(estateId);
+    els.tEmpty.hidden = list.length > 0;
+    els.tWrap.hidden = list.length === 0;
+    els.tTbody.innerHTML = '';
+    list.forEach(x => {
+      const tr = document.createElement('tr');
+      const sub = [];
+      if (x.account === 'income') sub.push('income');
+      if (x.payee) sub.push('to/by ' + x.payee);
+      if (x.beneficiary) sub.push(x.beneficiary);
+      if (x.reference) sub.push(x.reference);
+      const sign = x.kind === 'money_in' ? '' : '−';
+      tr.innerHTML = `<td>${esc(x.date)}</td>` +
+        `<td><b>${esc(x.description)}</b>${sub.length ? `<div class="tx-sub">${esc(sub.join(' · '))}</div>` : ''}</td>` +
+        `<td><span class="tx-kind k-${x.kind}">${KIND_LABELS[x.kind]}</span></td>` +
+        `<td class="r">${sign}${fmtMoney(x.amount)}</td>` +
+        `<td><div class="row-actions"><button class="link-btn" data-edit-tx="${x.id}">Edit</button><button class="link-btn danger" data-del-tx="${x.id}">Delete</button></div></td>`;
+      els.tTbody.appendChild(tr);
+    });
+    const t = store.ledgerTotals(estateId);
+    els.pIn.textContent = fmtMoney(t.principal.receipts);
+    els.pOut.textContent = fmtMoney(t.principal.disbursements);
+    els.pDistr.textContent = fmtMoney(t.principal.distributions);
+    els.pReimb.textContent = fmtMoney(t.principal.reimbursable);
+    els.pCash.textContent = fmtMoney(t.principal.cashOnHand);
+    els.iIn.textContent = fmtMoney(t.income.receipts);
+    els.iOut.textContent = fmtMoney(t.income.disbursements);
+    els.iDistr.textContent = fmtMoney(t.income.distributions);
+    els.iCash.textContent = fmtMoney(t.income.cashOnHand);
+  }
+
+  els.tTbody.addEventListener('click', (ev) => {
+    const editId = ev.target.dataset.editTx;
+    const delId = ev.target.dataset.delTx;
+    const estateId = store.state.activeEstateId;
+    if (!estateId) return;
+    if (editId) {
+      const x = store.listTx(estateId).find(t => t.id === editId);
+      if (!x) return;
+      editingTxId = editId;
+      els.tDate.value = x.date; els.tKind.value = x.kind; els.tAmount.value = String(x.amount);
+      els.tAcct.value = x.account; els.tDesc.value = x.description;
+      els.tPayee.value = x.payee || ''; els.tBenef.value = x.beneficiary || ''; els.tRef.value = x.reference || '';
+      els.tKind.dispatchEvent(new Event('change'));
+      els.tSave.textContent = 'Save changes';
+      els.tCancel.hidden = false;
+      els.tDate.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else if (delId) {
+      if (store.deleteTx(estateId, delId)) { if (editingTxId === delId) resetTxForm(); render(); }
+    }
+  });
+
   // ---- render (tab counts + panels) ----
   function render() {
     const e = store.getActive();
@@ -321,6 +458,9 @@
     const txs = (e && e.transactions && e.transactions.length) || 0;
     els.counts.assets.hidden = !assets; els.counts.assets.textContent = assets;
     renderAssets();
+    const txs2 = (e && e.transactions && e.transactions.length) || 0;
+    els.counts.ledger.hidden = !txs2; els.counts.ledger.textContent = txs2;
+    renderLedger();
     els.counts.ledger.hidden = !txs; els.counts.ledger.textContent = txs;
     maybeShowBanner();
     fillForm();

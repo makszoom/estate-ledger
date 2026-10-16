@@ -20,6 +20,7 @@
   ];
   const TX_KINDS = ['money_in', 'money_out', 'distribution', 'reimbursable'];
   const OUTSIDE_PROBATE = ['yes', 'no', 'unknown'];
+  const VAGUE_DESCRIPTIONS = ['check', 'payment', 'paid', 'bill', 'deposit', 'transfer', 'money', 'cash', 'payment made', 'misc', 'various', 'stuff'];
   const VALUATION_SOURCES = ['appraisal', 'account_statement', 'market_estimate', 'tax_assessment', 'other'];
   const ASSET_CLASS_LABELS = {
     real_estate: 'Real Estate', bank_account: 'Bank Account', brokerage: 'Brokerage Account',
@@ -198,9 +199,114 @@
       unknownCount, count: assets.length
     };
   }
-  }
 
-    Store.validateAsset = function (fields) {
+  // ---- D3: Cashflow transactions ----
+  addTx(estateId, fields) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return { ok: false, errors: { general: 'Estate not found' } };
+    const errs = Store.validateTx(fields, estate);
+    if (Object.keys(errs).length) return { ok: false, errors: errs };
+    const tx = {
+      id: uid(),
+      date: fields.date,
+      kind: fields.kind,
+      account: fields.account,
+      amount: parseMoney(fields.amount),
+      description: fields.description.trim(),
+      payee: (fields.payee || '').trim(),
+      beneficiary: (fields.beneficiary || '').trim(),
+      reference: (fields.reference || '').trim(),
+      checkNo: (fields.checkNo || '').trim(),
+      createdAt: todayISO()
+    };
+    estate.transactions = estate.transactions || [];
+    estate.transactions.push(tx);
+    this.save();
+    return { ok: true, tx };
+  }
+  updateTx(estateId, txId, fields) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return { ok: false, errors: { general: 'Estate not found' } };
+    const idx = (estate.transactions || []).findIndex(x => x.id === txId);
+    if (idx === -1) return { ok: false, errors: { general: 'Transaction not found' } };
+    const merged = Object.assign({}, estate.transactions[idx], fields);
+    const errs = Store.validateTx(merged, estate);
+    if (Object.keys(errs).length) return { ok: false, errors: errs };
+    merged.amount = parseMoney(merged.amount);
+    estate.transactions[idx] = merged;
+    this.save();
+    return { ok: true, tx: merged };
+  }
+  deleteTx(estateId, txId) {
+    const estate = this.state.estates[estateId];
+    if (!estate || !estate.transactions) return false;
+    const before = estate.transactions.length;
+    estate.transactions = estate.transactions.filter(x => x.id !== txId);
+    if (estate.transactions.length === before) return false;
+    this.save();
+    return true;
+  }
+  listTx(estateId) {
+    const estate = this.state.estates[estateId];
+    if (!estate || !estate.transactions) return [];
+    // court listing = chronological
+    return estate.transactions.slice().sort((a, b) => a.date.localeCompare(b.date));
+  }
+  /** Charge-and-discharge cash totals per account type (principal | income) */
+  ledgerTotals(estateId) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return null;
+    const txs = estate.transactions || [];
+    const sums = {
+      principal: { receipts: 0, disbursements: 0, distributions: 0, reimbursable: 0 },
+      income:    { receipts: 0, disbursements: 0, distributions: 0, reimbursable: 0 }
+    };
+    for (const x of txs) {
+      const k = x.kind, a = x.account;
+      const amt = x.amount || 0;
+      if (k === 'money_in') sums[a].receipts += amt;
+      else if (k === 'money_out') sums[a].disbursements += amt;
+      else if (k === 'distribution') sums[a].distributions += amt;
+      else if (k === 'reimbursable') sums[a].reimbursable += amt;
+    }
+    for (const key of ['principal', 'income']) {
+      sums[key].disbursements = round2(sums[key].disbursements);
+      sums[key].receipts = round2(sums[key].receipts);
+      sums[key].distributions = round2(sums[key].distributions);
+      sums[key].reimbursable = round2(sums[key].reimbursable);
+      sums[key].cashOnHand = round2(
+        sums[key].receipts - sums[key].disbursements - sums[key].distributions);
+    }
+    sums.count = txs.length;
+    return sums;
+  }
+}
+
+    Store.validateTx = function (fields, estate) {
+    const errs = {};
+    if (!fields) return { general: 'No data' };
+    if (!fields.date) errs.date = 'Date is required';
+    else {
+      const d = new Date(fields.date + 'T00:00:00');
+      if (isNaN(d.getTime())) errs.date = 'Valid date required';
+      else if (d > new Date()) errs.date = 'Date cannot be in the future';
+      else if (estate && estate.dateOfDeath && fields.date < estate.dateOfDeath)
+        errs.date = 'Date is before the date of death — estate money only exists after death';
+    }
+    if (!fields.kind) errs.kind = 'Movement type is required';
+    else if (!TX_KINDS.includes(fields.kind)) errs.kind = 'Unknown movement type';
+    const amt = parseMoney(fields.amount);
+    if (amt === null || amt <= 0) errs.amount = 'Amount must be a positive number';
+    if (!fields.account) errs.account = 'Account type required';
+    else if (!ACCOUNT_TYPE.includes(fields.account)) errs.account = 'Principal or Income only';
+    if (!fields.description || !fields.description.trim()) errs.description = 'Description is required';
+    else if (VAGUE_DESCRIPTIONS.includes(fields.description.trim().toLowerCase())) errs.description = 'Too vague — write what this payment was for (e.g. "County filing fee for appointment petition")';
+    if (fields.kind === 'reimbursable' && !(fields.payee || '').trim()) errs.payee = 'Who paid this personally?';
+    if (fields.kind === 'distribution' && !(fields.beneficiary || '').trim()) errs.beneficiary = 'Who received the distribution?';
+    return errs;
+  };
+
+  Store.validateAsset = function (fields) {
     const errs = {};
     if (!fields || !fields.name || !fields.name.trim()) errs.name = 'Asset description is required';
     else if (fields.name.trim().length > 120) errs.name = 'Maximum 120 characters';

@@ -106,8 +106,26 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 .empty.mini{border-style:dashed;padding:26px 20px;margin-top:14px}
 .empty.mini p{margin:0}
 
+
+/* ===== Ledger panel (D3) ===== */
+.kind-hint{background:#F2F4F8;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13.5px;color:var(--gray-text);margin-bottom:14px}
+.tot-head{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-text);margin-bottom:10px}
+.tot-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.tot-col-t{font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.tot-line{display:flex;justify-content:space-between;font-size:14.5px;padding:4px 0}
+.tot-line b{font-variant-numeric:tabular-nums;font-weight:600}
+.tot-line.balance{border-top:2px solid var(--border);margin-top:6px;padding-top:8px;font-weight:700}
+.tot-line.balance b{color:var(--green)}
+.tx-kind{font-size:11px;padding:2px 8px;border-radius:12px;white-space:nowrap;font-weight:600}
+.k-money_in{background:#EAF4EF;color:var(--green)}
+.k-money_out{background:#FDF3E0;color:#8A5A00}
+.k-distribution{background:#E8EEF8;color:var(--navy)}
+.k-reimbursable{background:#F5EEF8;color:#6B3FA0}
+.tx-sub{font-size:12px;color:var(--gray-text)}
+
 @media(max-width:640px){
   .f-grid{grid-template-columns:1fr}
+  .tot-cols{grid-template-columns:1fr}
   input,select{max-width:100%}
   .btn{width:100%}
   .btn-row{flex-direction:column}
@@ -268,7 +286,103 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
   </div>
 </div>
 <!-- ============ LEDGER (D3) ============ -->
-<div class="panel" id="panel-ledger"><h2>Ledger</h2><p class="hint">Day 3 — receipts, payments, distributions.</p></div>
+<div class="panel" id="panel-ledger">
+  <h2>Cashflow Ledger</h2>
+  <p class="hint">Every movement of estate money in one place. <b>Write descriptions the court can understand</b> — "County filing fee for appointment petition", not "check".</p>
+
+  <div class="kind-hint" id="kind-hint" hidden></div>
+
+  <form id="form-tx" novalidate>
+    <div class="f-grid">
+      <div class="f-group">
+        <label for="t-date">Date <span class="req">*</span></label>
+        <input id="t-date" type="date">
+        <div class="err" id="terr-date"></div>
+      </div>
+      <div class="f-group">
+        <label for="t-kind">Movement type <span class="req">*</span></label>
+        <select id="t-kind">
+          <option value="">— Choose —</option>
+          <option value="money_in">Money in (estate received)</option>
+          <option value="money_out">Money out (estate paid)</option>
+          <option value="distribution">Distribution (to beneficiary)</option>
+          <option value="reimbursable">Executor paid personally (to be repaid)</option>
+        </select>
+        <div class="err" id="terr-kind"></div>
+      </div>
+      <div class="f-group">
+        <label for="t-amount">Amount <span class="req">*</span></label>
+        <input id="t-amount" inputmode="decimal" placeholder="e.g. 1,850.00">
+        <div class="err" id="terr-amount"></div>
+      </div>
+      <div class="f-group">
+        <label for="t-acct">Principal or Income <span class="req">*</span></label>
+        <select id="t-acct">
+          <option value="principal">Principal</option>
+          <option value="income">Income (interest, rent, dividends)</option>
+        </select>
+        <div class="err" id="terr-acct"></div>
+        <div class="hintfield">Courts usually want these separate. Sell an asset? Its proceeds are principal; interest/rent while you hold it = income.</div>
+      </div>
+      <div class="f-group fg-wide">
+        <label for="t-desc">Description <span class="req">*</span> <span style="font-weight:400;color:var(--gray-text)">— what this movement was for</span></label>
+        <input id="t-desc" maxlength="140" placeholder="e.g. County filing fee for appointment petition">
+        <div class="err" id="terr-desc"></div>
+      </div>
+      <div class="f-group" id="group-payee">
+        <label for="t-payee">Paid by / to whom <span style="font-weight:400;color:var(--gray-text)">(disbursement &amp; reimbursable)</span></label>
+        <input id="t-payee" maxlength="120" placeholder="e.g. Sunrise Funeral / Executor (self)">
+        <div class="err" id="terr-payee"></div>
+      </div>
+      <div class="f-group" id="group-beneficiary" hidden>
+        <label for="t-benef">Beneficiary <span class="req">*</span> — who received it</label>
+        <input id="t-benef" maxlength="120" placeholder="e.g. Alice Marshal (daughter)">
+        <div class="err" id="terr-benef"></div>
+      </div>
+      <div class="f-group">
+        <label for="t-ref">Reference / check # <span style="font-weight:400;color:var(--gray-text)">(optional)</span></label>
+        <input id="t-ref" maxlength="60" placeholder="e.g. check 1042 / wire 3/11">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn btn-navy" id="btn-save-tx">Add transaction</button>
+      <button type="button" class="btn btn-ghost" id="btn-cancel-tx" hidden>Cancel edit</button>
+    </div>
+  </form>
+
+  <!-- running cash view -->
+  <div class="totals" id="ledger-totals">
+    <div class="tot-head">Running balances</div>
+    <div class="tot-cols">
+      <div class="tot-col">
+        <div class="tot-col-t">Principal</div>
+        <div class="tot-line"><span>In</span><b id="p-in">$0.00</b></div>
+        <div class="tot-line"><span>Out</span><b id="p-out">$0.00</b></div>
+        <div class="tot-line"><span>Distributed</span><b id="p-distr">$0.00</b></div>
+        <div class="tot-line"><span>Executor to be repaid</span><b id="p-reimb">$0.00</b></div>
+        <div class="tot-line balance"><span>Cash on hand</span><b id="p-cash">$0.00</b></div>
+      </div>
+      <div class="tot-col">
+        <div class="tot-col-t">Income</div>
+        <div class="tot-line"><span>In</span><b id="i-in">$0.00</b></div>
+        <div class="tot-line"><span>Out</span><b id="i-out">$0.00</b></div>
+        <div class="tot-line"><span>Distributed</span><b id="i-distr">$0.00</b></div>
+        <div class="tot-line balance"><span>Cash on hand</span><b id="i-cash">$0.00</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- table -->
+  <div id="tx-table-wrap" class="table-wrap">
+    <table class="tbl" id="tx-table">
+      <thead><tr><th>Date</th><th>Description</th><th>Type</th><th class="r">Amount</th><th></th></tr></thead>
+      <tbody id="tx-tbody"></tbody>
+    </table>
+  </div>
+  <div class="empty mini" id="tx-empty" hidden>
+    <p><b>No transactions yet.</b> Record movements as they happen — interest, payments, sales, distributions.</p>
+  </div>
+</div>
 <!-- ============ REPORT (D5) ============ -->
 <div class="panel" id="panel-report"><h2>Summary of Account</h2><p class="hint">Day 5 — charge-and-discharge report.</p></div>
 <!-- ============ EXPORT (D6) ============ -->
