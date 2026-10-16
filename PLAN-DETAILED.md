@@ -89,7 +89,7 @@
 ### Модуль S: Sample Estate
 - Fictional demo-estate в 1 клик с лендинга: read-only, 12-15 транзакций, красивый готовый отчёт — юзер смотрит продукт БЕЗ ввода своих (конверсионный паттерн Settled, «Try a fictional workspace»)
 
-### Что НЕ в v1.0 (честно)
+### Что НЕ в v1.0 (честно) — [всё реализовано в v2, см. ниже]
 - ❌ Carry Value vs Standard переключатель (обязателен CA/KY/OH/MN/SC/VA/WI — v2; в v1 делаем Standard с дисклеймером «если ваш суд требует carry-value отчёт, покажите юристу структуру»)
 - ❌ Формы конкретных судов (CA Judicial Council GC-405 series, NY AF-series) — v2/v3 by-state
 - ❌ CSV/TSV bank import (v2, Settled-паттерн: mapping + dub-flags)
@@ -133,6 +133,12 @@
 | **8** | 6 SEO-страниц + /probate-accounting guide + glossary (контент-скелет) + GSC + sitemap | полный launch-контур |
 
 **Параллельно Day 9-14:** контент SEO-страниц (реальные тексты), 2-3 поста (r/EstatePlanning, r/inheritance, r/legaladvice — вопрос-формат), FB-группы executor'ов.
+
+
+> **СТАТУС v2 (17.10.2026): ВСЁ ВЫШЕПЕРЕЧИСЛЕННОЕ РЕАЛИЗОВАНО.**
+> Carry-value switch (7 штатов) — Д9-10; executor fee calculator (24 штата + SEO-лендинг) — Д11;
+> Bank CSV import — Д12-13; CA companion worksheet — Д14; multi-estate dashboard + archive — Д18.
+> Полный suite: 472 теста PASS. Всё LIVE. Осталось вне продукта: домен/GSC/AdSense (решение Макса, ROADMAP.md).
 
 ## 5. SEO-архитектура (6 страниц + education)
 

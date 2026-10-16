@@ -1,7 +1,7 @@
 ---
 name: estate-ledger
-version: 2.0.0-spec
-updated: 2026-10-17
+version: 2.0.0
+updated: 2026-10-17 (v2 complete)
 ---
 
 # AGENTS.md — Estate Ledger
@@ -128,7 +128,7 @@ estate-ledger/
 | v2: Д11 fee calculator (24 штата + SEO-лендинг) | ✅ 17.10 (ee0bb83) — 344 теста |
 | v2: Д12-13 bank CSV import (parse/dedupe/preview/commit) | ✅ 17.10 (cda0759) — 381 тест, LIVE 20/20 |
 | v2: Д18 multi-estate dashboard (cards/archive/restore) | ✅ 17.10 (f215662) — 472 теста, LIVE 19/19 |
-| **v2: Д19-20 (полировка, полный финал, отчёт Максу)** | ⏳ NEXT |
+| v2: Д19-20 полировка (debug-sweep, vision-ревью всех вью, live-верификация) | ✅ 17.10 |
 | Домен estateledger.app | ⏸ ОТЛОЖЕН Максом 17.10 («давай отложим») |
 | USDT-кошелёк donate | ⏸ ждёт адрес от Макса (placeholder в модалке) |
 | GSC / AdSense / Reddit-FB посты | ⏸ после домена / 5K pv / руками Макса |
