@@ -26,7 +26,7 @@ test('exportState: serializes full state with assets/txs/sales', () => {
   const parsed = JSON.parse(json);
   assert(parsed.estates[eid].assets.length === 1, 'assets in export');
   assert(parsed.estates[eid].transactions.length === 1, 'txs in export');
-  assert(parsed.version === 1, 'version tag');
+  assert(parsed.version === 2, 'version tag (D9: schema v2)');
 });
 test('importState: restore replaces state + reload works', () => {
   mock = mockStorage();
