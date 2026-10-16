@@ -295,6 +295,106 @@
     if (res.ok) toast('Commission of ' + fmtMoney(fee) + ' recorded in the Ledger.', false);
   });
 
+
+  // ---- D12: bank CSV import ----
+  let importDrafts = [];
+  const BI = window.EstateLedgerCore.BankImport;
+  // D12: change via delegated listener on document (reliable regardless of init timing)
+  document.addEventListener('change', (ev) => {
+    const tgt = ev.target && ev.target.closest ? ev.target.closest('#import-file') : null;
+    if (!tgt) return;
+    const file = ev.target.files && ev.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { importFail('File is larger than 5 MB — split it in half and import both parts.'); return; }
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const text = String(reader.result || '');
+        const parsed = BI.parseBankCsv(text);
+        if (!parsed.rows.length) { importFail('Could not find rows with a date and dollar amount. Check that the first line has column names (Date, Amount, Description).'); return; }
+        if (parsed.rows.length > 3000) { importFail('More than 3000 rows — split the file to keep the preview usable.'); return; }
+        const estate = store.getActive();
+        if (!estate) { importFail('Create an estate in Setup first.'); return; }
+        // dedupe vs existing txs (±90 days lookback window by spec)
+        const existing = (estate.transactions || []);
+        importDrafts = BI.markDuplicates(parsed.rows, existing);
+        const dupes = importDrafts.filter(d => d.dupe).length;
+        const distHints = importDrafts.filter(d => d.dupeOfKind === 'distribution').length;
+        $('import-summary').innerHTML = '<b>' + importDrafts.length + ' transactions found</b>' +
+          (dupes ? ' · <span style="color:#B00020">' + dupes + ' likely duplicates (pre-checked out)</span>' : '') +
+          (distHints ? ' · ' + distHints + ' matches a recorded distribution — check before importing' : '');
+        renderImportPreview();
+        $('import-preview').style.display = 'block';
+        $('import-bad').style.display = 'none';
+      } catch (e) {
+        importFail('Could not read that file: ' + (e.message || 'unknown error'));
+      }
+    };
+    reader.onerror = () => importFail('Could not read the file.');
+    reader.readAsText(file);
+  });
+  function importFail(msg) {
+    $('import-bad').textContent = msg;
+    $('import-bad').style.display = 'block';
+    $('import-preview').style.display = 'none';
+  }
+  function renderImportPreview() {
+    const tb = $('import-tbody');
+    tb.innerHTML = '';
+    importDrafts.forEach((d, i) => {
+      const tr = document.createElement('tr');
+      if (d.dupe) tr.style.background = '#FDECEC';
+      if (d.dupeOfKind === 'distribution' && !d.dupe) tr.style.background = '#FFF6E0';
+      const account = (d.kind === 'money_in') ? 'principal' : 'principal';
+      tr.innerHTML =
+        '<td style="padding:8px 10px"><input type="checkbox" class="imp-check" data-i="' + i + '"' + ((d.dupe || d.dupeOfKind === 'distribution') ? '' : ' checked') + '></td>' +
+        '<td style="padding:8px 10px">' + d.date + '</td>' +
+        '<td style="padding:8px 10px">' + (d.kind === 'money_in' ? '<span style="color:#2D6A4F">Money in</span>' : '<span style="color:#B05A00">Money out</span>') + '</td>' +
+        '<td style="padding:8px 10px;text-align:right">' + fmtMoney(d.amount) + '</td>' +
+        '<td style="padding:8px 10px">' + (d.description || '<i style="color:#9A958D">no description</i>') + '</td>' +
+        '<td style="padding:8px 10px"><select class="imp-account" data-i="' + i + '"><option value="principal">Principal</option><option value="income">Income</option></select></td>' +
+        '<td style="padding:8px 10px">' + (d.dupe ? '<b style="color:#B00020">duplicate</b>' : (d.dupeOfKind === 'distribution' ? '<b style="color:#8A5A00">=? existing distribution</b>' : '<span style="color:#2D6A4F">new</span>')) + '</td>';
+      tb.appendChild(tr);
+    });
+  }
+  document.addEventListener('click', (ev) => {
+    if (ev.target.closest && ev.target.closest('#btn-import-commit')) {
+    if (!importDrafts.length) { importFail('Nothing to import.'); return; }
+    const checks = [...document.querySelectorAll('.imp-check')];
+    const estate = store.getActive();
+    if (!estate) { importFail('Create an estate first.'); return; }
+    let added = 0, skipped = 0;
+    const errors = [];
+    checks.forEach(chk => {
+      const i = Number(chk.dataset.i);
+      if (!chk.checked) { skipped++; return; }
+      const d = importDrafts[i];
+      if (!d) return;
+      const accountSel = document.querySelector('.imp-account[data-i="' + i + '"]');
+      const account = accountSel ? accountSel.value : 'principal';
+      const desc = d.description || 'Bank transaction ' + d.date + ' (imported)';
+      const res = store.addTx(store.state.activeEstateId, { kind: d.kind, date: d.date, amount: d.amount,
+        description: desc, account });
+      if (res.ok) added++; else errors.push((d.date) + ': ' + Object.values(res.errors || {}).join(' '));
+    });
+    if (errors.length) {
+      importFail('Imported ' + added + ' rows; ' + errors.length + ' rows rejected: ' + errors.slice(0,3).join('; '));
+    } else {
+      toast('Imported ' + added + ' transactions from bank CSV.', false);
+    }
+    importDrafts = [];
+    $('import-preview').style.display = 'none';
+    $('import-file').value = '';
+    render();
+    return;
+    }
+    if (ev.target.closest && ev.target.closest('#btn-import-cancel')) {
+      importDrafts = [];
+      $('import-preview').style.display = 'none';
+      $('import-file').value = '';
+    }
+  });
+
   // ---- create empty → auto-open create form ----
   $('btn-create-first').addEventListener('click', () => {
     editingId = null;
