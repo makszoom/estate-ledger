@@ -141,22 +141,42 @@
       else if (k === 'role') input.value = 'executor';
       else input.value = '';
     }
+    // D9.5: accounting basis radio
+    const basisVal = (e && e.accountingBasis) || 'standard';
+    const radio = document.querySelector('input[name=basis][value="' + basisVal + '"]');
+    if (radio) radio.checked = true;
     els.setupEmpty.hidden = !!e;
     els.setupForm.hidden = !e;
     els.deleteBtn.hidden = !e;
     // Кнопку saveBtn здесь НЕ трогаем: submit-обработчик показывает 'Saved ✓' сам;
   }
 
+  let pendingBasisEstate = null;  // D9.5 fields awaiting modal confirmation
   els.form.addEventListener('submit', (ev) => {
     ev.preventDefault();
     clearErrs();
+    const basisRadio = document.querySelector('input[name=basis]:checked');
+    const newBasis = basisRadio ? basisRadio.value : 'standard';
+    const prev = editingId ? store.state.estates[editingId] : null;
+    const basisChanged = prev && (prev.accountingBasis || 'standard') !== newBasis;
+    const hasData = prev && ((prev.assets || []).length || (prev.transactions || []).length || (prev.sales || []).length);
     const fields = {
       decedent: els.decedent.value.trim(),
       caseNumber: els.caseNo.value.trim(),
       state: els.state.value,
       role: els.role.value,
-      dateOfDeath: els.dod.value
+      dateOfDeath: els.dod.value,
+      accountingBasis: newBasis
     };
+    // D9.5: confirm switch on an estate that already holds data (spec: custom modal)
+    if (basisChanged && hasData) {
+      pendingBasisEstate = { fields };
+      $('basis-confirm-text').textContent =
+        'Switch this estate from ' + ((prev.accountingBasis || 'standard') === 'carry' ? 'Carry value' : 'Standard') +
+        ' to ' + (newBasis === 'carry' ? 'Carry value' : 'Standard') + '? Your records stay the same; only the report presentation changes.';
+      $('modal-basis').classList.add('open');
+      return;
+    }
     let res;
     if (editingId && store.state.estates[editingId]) {
       res = store.updateEstate(editingId, fields);
@@ -196,6 +216,32 @@
   // modal close on overlay click
   els.modalDelete.addEventListener('click', (ev) => {
     if (ev.target === els.modalDelete) els.modalDelete.classList.remove('open');
+  });
+
+  // ---- D9.5: accounting-basis confirm modal ----
+  function applyBasisNow() {
+    if (!pendingBasisEstate) return;
+    const res = store.updateEstate(editingId, pendingBasisEstate.fields);
+    if (res.ok) {
+      renderSwitcher(); render(); toast('Basis switched — report presentation updated.');
+    }
+    pendingBasisEstate = null;
+    fillForm();
+  }
+  $('modal-basis').addEventListener('click', (ev) => {
+    if (ev.target === $('modal-basis')) { $('modal-basis').classList.remove('open'); pendingBasisEstate = null; }
+  });
+  // D9.5: delegated — reliable regardless of init timing
+  document.addEventListener('click', (ev) => {
+    const t = ev.target.closest ? ev.target.closest('#btn-basis-cancel') : null;
+    if (t) {
+        $('modal-basis').classList.remove('open'); pendingBasisEstate = null; fillForm();
+      return;
+    }
+    const t2 = ev.target.closest ? ev.target.closest('#btn-basis-confirm') : null;
+    if (t2) {
+        $('modal-basis').classList.remove('open'); applyBasisNow();
+    }
   });
 
   // ---- create empty → auto-open create form ----
@@ -623,6 +669,16 @@
     const repo = store.buildAccountReport(estateId);
     if (!repo) { els.rptNo.hidden = false; els.rptBody.hidden = true; return; }
     els.rptNo.hidden = true; els.rptBody.hidden = false;
+
+    // D9.5: basis badge + carry note
+    const isCarry = (repo.basis || 'standard') === 'carry';
+    const badge = $('doc-basis-badge'), note = $('doc-basis-note');
+    if (badge) {
+      badge.hidden = false;
+      badge.textContent = isCarry ? 'Carry value approach (CA/VA format)' : 'Standard · market value';
+      badge.classList.toggle('carry', isCarry);
+    }
+    if (note) note.style.display = isCarry ? 'block' : 'none';
 
     // flags
     els.rptFlags.innerHTML = '';
