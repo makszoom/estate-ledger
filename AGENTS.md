@@ -50,8 +50,10 @@ estate-ledger/
 │   ├── css/style.css          # Trust Legal палитра + Apple Design CSS
 │   ├── js/core.js             # ★ вся логика (649 строк): Store, assets, tx, sales, report, export
 │   ├── js/app.js              # UI glue (tabs, toasts, sample-banner)
+│   ├── js/fee-schedules.js    # 24 штата, статут-refs (D11)
+│   ├── js/bank-import.js      # CSV parse/mapping/dedupe (D12)
 │   └── js/sample-estate.js    # Jane E. Sample demo (?sample=1, idempotent)
-├── tests/                     # ★ 219 тестов: 6 unit-файлов + e2e-day1..7 (CDP port 9333)
+├── tests/                     # ★ 381 тест: 9 unit-файлов + e2e-day1..12/d9-ui (CDP 9333, профиль 2, cache-size=1)
 ├── scripts/                   # деплой-скрипты
 └── .env                       # секреты (НЕ в git)
 ```
@@ -122,7 +124,10 @@ estate-ledger/
 | Fix CRITICAL: absolute hrefs → 404 | ✅ 17.10 (a8c8d82) — 10 линков в index.html + ../index.html в app.html; full link-crawl PASS |
 | docs/ROADMAP.md (v2 решение, kill) | ✅ 17.10 (0821269) |
 | docs/V2-SPEC.md (+§0 self-audit 12 gaps) | ✅ 17.10 (b3791ad → 35c369d) |
-| **v2 разработка (Д9-Д20)** | ⏳ NEXT — старт по «давай Д9»; порядок: миграция v1→v2 → carry → fees → CSV → worksheet → dash |
+| v2: Д9-Д10 carry-value (ядро+UI+печать+sample, vision-verified) | ✅ 17.10 (e44eea5, 7a71d85, 12dbe95) — 284 теста |
+| v2: Д11 fee calculator (24 штата + SEO-лендинг) | ✅ 17.10 (ee0bb83) — 344 теста |
+| v2: Д12-13 bank CSV import (parse/dedupe/preview/commit) | ✅ 17.10 (cda0759) — 381 тест, LIVE 20/20 |
+| **v2: Д17-18 (cудебный worksheet CA + multi-estate dash)** | ⏳ NEXT |
 | Домен estateledger.app | ⏸ ОТЛОЖЕН Максом 17.10 («давай отложим») |
 | USDT-кошелёк donate | ⏸ ждёт адрес от Макса (placeholder в модалке) |
 | GSC / AdSense / Reddit-FB посты | ⏸ после домена / 5K pv / руками Макса |
