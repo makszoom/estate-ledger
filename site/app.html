@@ -207,6 +207,27 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 .fee-note-warn{color:#8A5A00}
 
 .errbox{display:block}
+
+/* D14 worksheet */
+.ws-badge{display:inline-block;background:#5A6B87;color:#fff;font-size:12px;letter-spacing:.08em;padding:5px 12px;border-radius:6px;margin-bottom:10px}
+.ws-title{font-family:Georgia,serif;font-size:17px;letter-spacing:.04em;margin-bottom:6px}
+.ws-cap{font-size:13.5px;color:#444;margin-bottom:4px}
+.wsnote{font-size:13.5px;color:#464B56;background:#F2F4F8;border-radius:8px;padding:10px 14px;margin:10px 0}
+.wssec{margin:16px 0}
+.wssec h4{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--navy);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:8px}
+.wsrow{display:flex;gap:14px;font-size:13.5px;padding:5px 0;border-bottom:1px dotted #EEE;justify-content:space-between}
+.wsrow span:first-child{min-width:88px;color:#5A5F6A}
+.wsrow.ws-h{font-weight:700;color:#1A1A1A;border-bottom:1.5px solid #1A1A1A}
+.wsrow span:last-child{text-align:right;font-variant-numeric:tabular-nums}
+.wsnone{font-size:13px;color:#9A958D;font-style:italic;padding:6px 0}
+.ws-tail{font-size:12.5px;color:#9A958D;margin-top:14px}
+@media print {
+  #panel-ws{display:block!important}
+  #btn-ws-back{display:none!important}
+}
+
+.ws-shelved{display:none!important}
+@keyframes wsIn{to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -316,6 +337,17 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 </div>
 
 <!-- ============ ASSETS (D2) ============ -->
+
+<!-- ============ D14: CA WORKSHEET VIEW ============ -->
+<div class="panel" id="panel-ws" hidden>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+    <h2 style="margin:0">California companion worksheet</h2>
+    <button class="btn btn-ghost" id="btn-ws-back">← Back to Account</button>
+  </div>
+  <p style="font-size:14px;color:#464B56;margin-bottom:16px">Figures below follow the GC-405 field order (conservatorship/guardianship accounting). Transfer them to the official fillable form at courts.ca.gov, or hand the worksheet to your attorney. For a decedent estate in California, the Account tab (Carry basis) already matches the charge-and-discharge format the court expects.</p>
+  <div id="ws-body" class="court-doc"></div>
+</div>
+
 <div class="panel" id="panel-assets">
   <h2>Asset Inventory</h2>
   <p class="hint">List every asset the estate controls, at its <b>date-of-death value</b> — that date is the valuation standard courts expect. Assets that pass outside probate (life insurance with a named beneficiary, TOD accounts) are tracked separately.</p>
@@ -574,6 +606,7 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
     <div class="btn-row">
       <button class="btn btn-navy" id="btn-print-report">Print / Save as PDF</button>
       <button class="btn btn-ghost" id="btn-csv-report">Export CSV</button>
+      <button class="btn btn-ghost" id="btn-ca-worksheet">CA companion worksheet</button>
     </div>
   </div>
 </div>
@@ -693,8 +726,9 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 <script src="js/core.js"></script>
 <script src="js/fee-schedules.js"></script>
 <script src="js/bank-import.js"></script>
+<script src="js/court-forms.js"></script>
 <script src="js/sample-estate.js"></script>
-<script src="js/app.js?v=7"></script>
+<script src="js/app.js?v=9"></script>
 <!-- ============ D12: BANK CSV IMPORT ============ -->
 <div id="import-zone" style="margin-top:22px;padding-top:18px;border-top:1px solid var(--border)">
   <h3 style="font-size:17px">Import bank CSV</h3>

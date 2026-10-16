@@ -99,6 +99,10 @@
       document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
       document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
       tab.classList.add('active');
+      // D14: if worksheet was open, close it and unshelve panels
+      document.querySelectorAll('.panel.ws-shelved').forEach(p0 => p0.classList.remove('ws-shelved'));
+      $('panel-ws') && ($('panel-ws').hidden = true);
+      $('import-zone') && ($('import-zone').style.display = '');
       $('panel-' + tab.dataset.tab).classList.add('active');
       render();
     });
@@ -295,6 +299,28 @@
     if (res.ok) toast('Commission of ' + fmtMoney(fee) + ' recorded in the Ledger.', false);
   });
 
+
+
+  // ---- D14: CA companion worksheet ----
+  $('btn-ca-worksheet') && $('btn-ca-worksheet').addEventListener('click', () => {
+    const e = store.getActive();
+    const w = window.EstateLedgerCore.CourtForms.buildCAWorksheet(store.state.activeEstateId, JSON.parse(JSON.stringify(store.state)));
+    if (!w || !e) { return; }
+    $('ws-body').innerHTML = window.EstateLedgerCore.CourtForms.renderCAWorksheet(w);
+    document.querySelectorAll('.panel').forEach(p0 => { if (p0.id !== 'panel-ws') p0.classList.add('ws-shelved'); });
+    $('panel-ws').hidden = false;
+    $('panel-ws').classList.add('active');  // .panel{display:none} — needs active to show
+    // hide import-zone too (it lives inside export panel but was visible in vision review as a stray block)
+    $('import-zone').style.display = 'none';
+    $('panel-ws').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    toast('Worksheet built from your ledger — print it or transfer the figures.', false);
+  });
+  $('btn-ws-back') && $('btn-ws-back').addEventListener('click', () => {
+    document.querySelectorAll('.panel.ws-shelved').forEach(p0 => p0.classList.remove('ws-shelved'));
+    $('panel-ws').hidden = true;
+    $('panel-ws').classList.remove('active');
+    $('import-zone').style.display = '';
+  });
 
   // ---- D12: bank CSV import ----
   let importDrafts = [];
