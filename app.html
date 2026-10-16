@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Ledger — Estate Ledger</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAF8; --ink:#1A1A1A; --navy:#1E3A5F; --navy-dark:#142B47;
+  --green:#2D6A4F; --red:#B00020; --border:#E5E2DC;
+  --gray-text:#5A5F6A; --card:#FFFFFF;
+  --shadow-sm:0 1px 3px rgba(26,26,26,.06);
+  --shadow-md:0 4px 16px rgba(26,26,26,.08);
+  --radius:10px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg);line-height:1.55;font-size:17px;-webkit-font-smoothing:antialiased}
+
+/* Top bar */
+.topbar{background:var(--navy);color:#fff;display:flex;align-items:center;gap:16px;padding:12px 20px}
+.topbar .logo{font-family:Georgia,serif;font-size:17px;color:#fff;text-decoration:none;font-weight:700}
+.topbar .estates{margin-left:16px;display:flex;gap:8px;align-items:center}
+.topbar select{background:var(--navy-dark);color:#fff;border:1px solid rgba(255,255,255,.25);border-radius:6px;padding:6px 10px;font-size:14px}
+.topbar .spacer{flex:1}
+.topbar a.tl{color:rgba(255,255,255,.85);font-size:14px}
+.topbar a.tl:hover{color:#fff}
+
+/* Backup banner */
+.banner{display:none;background:#EAF4EF;color:var(--green);padding:10px 20px;font-size:14px;text-align:center}
+.banner.show{display:block}
+
+/* Tabs */
+.tabs{display:flex;gap:2px;background:#fff;border-bottom:1px solid var(--border);padding:0 12px;overflow-x:auto}
+.tab{padding:14px 20px;font-size:15px;color:var(--gray-text);border-bottom:3px solid transparent;white-space:nowrap;cursor:pointer}
+.tab:hover{color:var(--ink)}
+.tab.active{color:var(--navy);font-weight:700;border-bottom-color:var(--navy)}
+.tab .count{display:inline-block;background:#EAF4EF;color:var(--green);border-radius:10px;font-size:12px;padding:0 7px;margin-left:6px}
+
+/* Panels */
+.panel{display:none;max-width:880px;margin:0 auto;padding:28px 20px 80px}
+.panel.active{display:block}
+.panel h2{font-size:24px;letter-spacing:-.02em;margin-bottom:6px}
+.panel .hint{font-size:14px;color:var(--gray-text);margin-bottom:22px}
+
+/* Forms */
+.f-group{margin-bottom:18px}
+label{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+label .req{color:var(--red)}
+input,select{width:100%;max-width:420px;padding:12px 14px;font-size:16px;border:1px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);outline:none}
+input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,58,95,.12)}
+.err{color:var(--red);font-size:13px;margin-top:5px;display:none}
+.err.show{display:block}
+.hintfield{font-size:13.5px;color:#464B56;margin-top:4px;line-height:1.5}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:12px 24px;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent}
+.btn:active{transform:scale(.97);transition:transform .1s ease-out}
+.btn-navy{background:var(--navy);color:#fff}
+.btn-navy:hover{background:var(--navy-dark)}
+.btn-ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+.btn-ghost:hover{background:#F2F4F8}
+.btn-row{display:flex;gap:12px;margin-top:22px}
+
+/* Empty state */
+.empty{background:var(--card);border:2px dashed var(--border);border-radius:var(--radius);padding:48px 24px;text-align:center}
+.empty h3{margin-bottom:8px;font-size:18px}
+.empty p{color:var(--gray-text);font-size:15px;margin-bottom:18px}
+
+/* Modal (class-based, никогда display:flex!important) */
+.modal{display:none;position:fixed;inset:0;z-index:50;align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex;background:rgba(20,25,35,.45);backdrop-filter:blur(6px) saturate(160%);animation:overlayIn .25s ease forwards}
+.modal-card{background:#fff;border-radius:14px;box-shadow:0 12px 48px rgba(0,0,0,.22);max-width:560px;width:100%;padding:28px;transform:scale(.95);opacity:0;animation:cardIn .3s cubic-bezier(.16,1,.3,1) .05s forwards}
+@keyframes overlayIn{to{background:rgba(20,25,35,.45)}}
+@keyframes cardIn{to{transform:scale(1);opacity:1}}
+.modal.card-h2{margin-bottom:8px}
+.modal h3{margin-bottom:8px}
+.modal p{color:var(--gray-text);font-size:15px;margin-bottom:18px}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+  .modal-card{transform:none;opacity:1}
+}
+
+/* ===== Assets panel (D2) ===== */
+.f-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px}
+.fg-wide{grid-column:1/-1}
+.totals{margin:26px 0 14px;border:1px solid var(--border);border-radius:var(--radius);background:#fff;padding:14px 18px;max-width:480px}
+.tot-row{display:flex;justify-content:space-between;font-size:15px;padding:6px 0}
+.tot-row b{font-variant-numeric:tabular-nums}
+.tot-row.warn{color:#8A5A00}
+.tot-row.warn b{color:#8A5A00}
+.table-wrap{background:#fff;border:1px solid var(--border);border-radius:var(--radius);overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:14.5px;min-width:640px}
+.tbl th{background:var(--navy);color:#fff;text-align:left;padding:10px 14px;font-size:12.5px;letter-spacing:.06em;font-weight:600}
+.tbl th.r,.tbl td.r{text-align:right;font-variant-numeric:tabular-nums}
+.tbl td{padding:10px 14px;border-top:1px solid #F2EFE9;vertical-align:top}
+.tbl .aclass{color:var(--gray-text);font-size:13px}
+.tbl .flag{font-size:12px;padding:2px 8px;border-radius:12px;background:#EAF4EF;color:var(--green);white-space:nowrap}
+.tbl .flag.yes{background:#F1F1F1;color:var(--gray-text)}
+.tbl .flag.unknown{background:#FDF3E0;color:#8A5A00}
+.tbl .none{color:#C9C4BC;font-style:italic}
+.row-actions{display:flex;gap:10px;align-items:center;justify-content:flex-end}
+.link-btn{background:none;border:none;color:var(--navy);font-size:13.5px;cursor:pointer;padding:4px 6px;text-decoration:underline}
+.link-btn.danger{color:var(--red)}
+.empty.mini{border-style:dashed;padding:26px 20px;margin-top:14px}
+.empty.mini p{margin:0}
+
+
+/* ===== Ledger panel (D3) ===== */
+.kind-hint{background:#F2F4F8;border:1px solid var(--border);border-radius:8px;padding:10px 14px;font-size:13.5px;color:var(--gray-text);margin-bottom:14px}
+.tot-head{font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-text);margin-bottom:10px}
+.tot-cols{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.tot-col-t{font-weight:700;font-size:15px;color:var(--navy);margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px}
+.tot-line{display:flex;justify-content:space-between;font-size:14.5px;padding:4px 0}
+.tot-line b{font-variant-numeric:tabular-nums;font-weight:600}
+.tot-line.balance{border-top:2px solid var(--border);margin-top:6px;padding-top:8px;font-weight:700}
+.tot-line.balance b{color:var(--green)}
+.tx-kind{font-size:11px;padding:2px 8px;border-radius:12px;white-space:nowrap;font-weight:600}
+.k-money_in{background:#EAF4EF;color:var(--green)}
+.k-money_out{background:#FDF3E0;color:#8A5A00}
+.k-distribution{background:#E8EEF8;color:var(--navy)}
+.k-reimbursable{background:#F5EEF8;color:#6B3FA0}
+.tx-sub{font-size:12px;color:var(--gray-text)}
+
+
+/* ===== Sale (D4) ===== */
+.sale-preview{margin-top:14px;background:#F2F4F8;border-radius:8px;padding:14px 16px;font-size:14.5px;line-height:1.7}
+.sale-preview .gp{color:var(--green);font-weight:700}
+.sale-preview .lp{color:var(--red);font-weight:700}
+.sold-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;background:var(--navy);color:#fff;margin-left:6px;vertical-align:middle}
+
+
+/* ===== Report panel (D5) ===== */
+.rpt-doc{transform:none;max-width:880px;margin:0 auto}
+.rpt-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:8px}
+.rc-h{font-size:13px;letter-spacing:.12em;color:var(--navy);border-bottom:2px solid var(--navy);padding-bottom:8px;margin-bottom:10px;text-align:center}
+.rpt-col .doc-row{font-size:13.5px}
+.rpt-col .doc-row.total{border-top:2px solid var(--ink);font-weight:700;margin-top:6px;padding-top:8px}
+.bal-bad{background:var(--red)}
+.rpt-memo{font-size:12.5px;color:#8A5A00;margin-top:10px;text-align:center}
+.rpt-memo:empty{display:none}
+.oath{margin-top:22px;font-family:Georgia,serif;font-size:13px;color:var(--ink);border-top:1px solid var(--border);padding-top:14px}
+.oath-line{margin:6px 0}
+.oath .line{display:inline-block;border-bottom:1px solid var(--ink);width:220px}
+.oath .line.short{width:110px}
+.flags{max-width:880px;margin:0 auto 18px}
+.flag-item{display:flex;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:8px;font-size:14px;align-items:baseline}
+.flag-item.red{background:#FBEAEA;color:var(--red);border:1px solid #EFD3D3}
+.flag-item.amber{background:#FDF3E0;color:#8A5A00;border:1px solid #F0E0C0}
+.sub-h{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin:26px 0 10px;font-weight:700}
+.note-box{background:#F2F4F8;border-radius:var(--radius);padding:14px 18px;font-size:14px;max-width:880px;margin:14px auto 0}
+.rpt-head{margin-bottom:20px}
+@media print {
+  .topbar,.tabs,.banner,.flags,#rpt-flags,.btn-row,.sub-h{display:none!important}
+  body{background:#fff}
+  .panel{display:block!important;max-width:100%;padding:0}
+  .doc{border:none;box-shadow:none}
+  .rpt-cols{gap:16px}
+  section{page-break-inside:avoid}
+}
+@media(max-width:720px){.rpt-cols{grid-template-columns:1fr}}
+
+
+/* ===== Export (D6) ===== */
+.exp-grid{display:grid;grid-template-columns:1fr;gap:16px;max-width:560px}
+.exp-card{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:22px}
+.exp-card h3{font-size:17px;margin-bottom:6px}
+.exp-card p{font-size:14px;color:var(--gray-text)}
+.tiny-hint{font-size:12.5px;color:var(--gray-text);margin-top:8px}
+.tiny-hint a{font-size:12.5px}
+.reminder{margin-top:20px;font-size:14px;background:#FDF3E0;border:1px solid #F0E0C0;border-radius:8px;padding:12px 16px;color:#8A5A00;max-width:560px}
+
+
+/* ===== Toast (D7) ===== */
+.toasts{position:fixed;bottom:20px;right:20px;z-index:100;display:flex;flex-direction:column;gap:10px}
+.toast{background:var(--green);color:#fff;padding:12px 20px;border-radius:10px;font-size:14.5px;box-shadow:var(--shadow-md);animation:toastIn .3s cubic-bezier(.16,1,.3,1);max-width:320px}
+.toast.warn{background:#8A5A00}
+@keyframes toastIn{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.toast{animation:none}}
+@media(max-width:640px){.toasts{left:20px;right:20px;bottom:16px}.toast{max-width:none}}
+@media(max-width:640px){
+  .f-grid{grid-template-columns:1fr}
+  .tot-cols{grid-template-columns:1fr}
+  input,select{max-width:100%}
+  .btn{width:100%}
+  .btn-row{flex-direction:column}
+}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <a class="logo" href="../index.html" style="opacity:.94">← Estate Ledger</a>
+  <div class="estates" id="estate-switcher" hidden>
+    <select id="estate-select" aria-label="Switch estate"></select>
+  </div>
+  <div class="spacer"></div>
+  <a class="tl" href="#" id="backup-link">Backup data</a>
+</div>
+
+<div class="banner" id="backup-banner">
+  Your data lives in this browser only. <b>Download a JSON backup</b> weekly so a cleared browser doesn't erase months of records.
+  <button class="btn btn-ghost" style="padding:6px 14px;font-size:13px;margin-left:12px" id="banner-download">Download backup</button>
+  <button class="btn" style="padding:6px 14px;font-size:13px;background:transparent;color:var(--green)" id="banner-dismiss">Dismiss</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="setup">Setup</div>
+  <div class="tab" data-tab="assets">Assets <span class="count" id="count-assets" hidden></span></div>
+  <div class="tab" data-tab="ledger">Ledger <span class="count" id="count-ledger" hidden></span></div>
+  <div class="tab" data-tab="report">Account</div>
+  <div class="tab" data-tab="export">Backup &amp; Export</div>
+</div>
+
+<!-- ============ SETUP ============ -->
+<div class="panel active" id="panel-setup">
+  <!-- no-estate state -->
+  <div id="setup-empty" class="empty" hidden>
+    <h3>Welcome</h3>
+    <p>Create your first estate to start tracking assets, receipts, and the final account. Everything stays in this browser.</p>
+    <button class="btn btn-navy" id="btn-create-first">Create an estate</button>
+    <p style="margin-top:14px;font-size:13px"><a href="?sample=1">Open the Sample Estate instead →</a></p>
+  </div>
+
+  <!-- setup form -->
+  <div id="setup-form" hidden>
+    <h2>Estate Setup</h2>
+    <p class="hint">Basic facts the court will need on every page of your account.</p>
+    <form id="form-estate" novalidate>
+      <div class="f-group">
+        <label for="f-decedent">Name of decedent <span class="req">*</span></label>
+        <input id="f-decedent" autocomplete="off" placeholder="e.g. John A. Marshal">
+        <div class="err" id="err-decedent"></div>
+      </div>
+      <div class="f-group">
+        <label for="f-case">Court / case number <span style="font-weight:400;color:var(--gray-text)">(optional)</span></label>
+        <input id="f-case" autocomplete="off" placeholder="e.g. 26-P-0814" maxlength="40">
+        <div class="err" id="err-case"></div>
+        <div class="hintfield">Printed on every page of the account, if provided.</div>
+      </div>
+      <div class="f-group">
+        <label for="f-state">State <span class="req">*</span></label>
+        <select id="f-state"><option value="">— Select state —</option></select>
+        <div class="err" id="err-state"></div>
+        <div class="hintfield">Estate Ledger organizes your records; your court's own filing format may differ.</div>
+      </div>
+      <div class="f-group">
+        <label for="f-role">Your role <span class="req">*</span></label>
+        <select id="f-role">
+          <option value="executor">Executor (named in the will)</option>
+          <option value="administrator">Administrator (no will)</option>
+          <option value="personal_representative">Personal Representative (same as executor in some states)</option>
+          <option value="trustee">Trustee (trust administration)</option>
+        </select>
+        <div class="err" id="err-role"></div>
+      </div>
+      <div class="f-group">
+        <label for="f-dod">Date of death <span class="req">*</span></label>
+        <input type="date" id="f-dod">
+        <div class="err" id="err-dod"></div>
+        <div class="hintfield">Sets the valuation date for the inventory ("date-of-death value").</div>
+      </div>
+      <div class="btn-row">
+        <button type="submit" class="btn btn-navy" id="btn-save-estate">Save estate</button>
+        <button type="button" class="btn btn-ghost" id="btn-delete-estate" hidden>Delete this estate</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ============ ASSETS (D2) ============ -->
+<div class="panel" id="panel-assets">
+  <h2>Asset Inventory</h2>
+  <p class="hint">List every asset the estate controls, at its <b>date-of-death value</b> — that date is the valuation standard courts expect. Assets that pass outside probate (life insurance with a named beneficiary, TOD accounts) are tracked separately.</p>
+
+  <!-- add/edit form -->
+  <form id="form-asset" novalidate>
+    <div class="f-grid">
+      <div class="f-group fg-wide">
+        <label for="a-name">What is it <span class="req">*</span></label>
+        <input id="a-name" maxlength="120" placeholder="e.g. Home at 12 Elm St or Chase checking ••4521">
+        <div class="err" id="aerr-name"></div>
+      </div>
+      <div class="f-group">
+        <label for="a-class">Asset class <span class="req">*</span></label>
+        <select id="a-class"></select>
+        <div class="err" id="aerr-class"></div>
+      </div>
+      <div class="f-group">
+        <label for="a-value">Date-of-death value <span style="font-weight:400;color:var(--gray-text)">(USD, optional)</span></label>
+        <input id="a-value" inputmode="decimal" placeholder="e.g. 35,000 or appraisal letter value">
+        <div class="err" id="aerr-value"></div>
+      </div>
+      <div class="f-group">
+        <label for="a-probate">Passes outside probate? <span class="req">*</span></label>
+        <select id="a-probate">
+          <option value="unknown">Not sure yet</option>
+          <option value="no">No — part of the probate estate</option>
+          <option value="yes">Yes — transfers by beneficiary/TOD</option>
+        </select>
+        <div class="err" id="aerr-probate"></div>
+        <div class="hintfield">“Not sure yet” is normal — verify from the deed or account paperwork; until then this asset stays out of your totals.</div>
+        <div class="hintfield"><b>What's a "date-of-death value"?</b> What the asset was worth on the day your loved one passed — courts use that date to value the estate, not today's prices.</div>
+      </div>
+      <div class="f-group">
+        <label for="a-source">Value source <span style="font-weight:400;color:var(--gray-text)">(optional)</span></label>
+        <select id="a-source">
+          <option value="">Not set</option>
+          <option value="appraisal">Appraisal letter</option>
+          <option value="account_statement">Account statement</option>
+          <option value="market_estimate">Market estimate</option>
+          <option value="tax_assessment">Tax assessment</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="f-group fg-wide">
+        <label for="a-ref">Reference <span style="font-weight:400;color:var(--gray-text)">(optional — who/where the value came from)</span></label>
+        <input id="a-ref" maxlength="120" placeholder="e.g. Coldwell Banker appraisal, Jan 20">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn btn-navy" id="btn-save-asset">Add asset</button>
+      <button type="button" class="btn btn-ghost" id="btn-cancel-asset" hidden>Cancel edit</button>
+    </div>
+  </form>
+
+  <!-- totals -->
+  <div class="totals" id="assets-totals">
+    <div class="tot-row"><span>Probate inventory total</span><b id="tot-probate">$0.00</b></div>
+    <div class="tot-row" id="tot-outside-row" hidden><span>Passing outside probate</span><b id="tot-outside">$0.00</b></div>
+    <div class="tot-row warn" id="tot-unknown-row" hidden><span>Ownership to verify</span><b id="tot-unknown"></b></div>
+  </div>
+
+  <!-- table -->
+  <div id="assets-table-wrap" class="table-wrap">
+    <table class="tbl" id="assets-table">
+      <thead><tr><th>Asset</th><th>Class</th><th class="r">DOD value</th><th>In probate?</th><th></th></tr></thead>
+      <tbody id="assets-tbody"></tbody>
+    </table>
+  </div>
+  <div class="empty mini" id="assets-empty" hidden>
+    <p><b>No assets yet.</b> Start with bank accounts, the home, vehicles — anything the estate controls.</p>
+  </div>
+</div>
+<!-- ============ LEDGER (D3) ============ -->
+<div class="panel" id="panel-ledger">
+  <h2>Cashflow Ledger</h2>
+  <p class="hint">Every movement of estate money in one place. <b>Write descriptions the court can understand</b> — "County filing fee for appointment petition", not "check".</p>
+
+  <div class="kind-hint" id="kind-hint" hidden></div>
+
+  <form id="form-tx" novalidate>
+    <div class="f-grid">
+      <div class="f-group">
+        <label for="t-date">Date <span class="req">*</span></label>
+        <input id="t-date" type="date">
+        <div class="err" id="terr-date"></div>
+      </div>
+      <div class="f-group">
+        <label for="t-kind">Movement type <span class="req">*</span></label>
+        <select id="t-kind">
+          <option value="">— Choose —</option>
+          <option value="money_in">Money in (estate received)</option>
+          <option value="money_out">Money out (estate paid)</option>
+          <option value="distribution">Distribution (to beneficiary)</option>
+          <option value="reimbursable">Executor paid personally (to be repaid)</option>
+        </select>
+        <div class="err" id="terr-kind"></div>
+      </div>
+      <div class="f-group">
+        <label for="t-amount">Amount <span class="req">*</span></label>
+        <input id="t-amount" inputmode="decimal" placeholder="e.g. 1,850.00">
+        <div class="err" id="terr-amount"></div>
+      </div>
+      <div class="f-group">
+        <label for="t-acct">Principal or Income <span class="req">*</span></label>
+        <select id="t-acct">
+          <option value="principal">Principal</option>
+          <option value="income">Income (interest, rent, dividends)</option>
+        </select>
+        <div class="err" id="terr-acct"></div>
+        <div class="hintfield">Courts usually want these separate. Sell an asset? Its proceeds are principal; interest/rent while you hold it = income.</div>
+      </div>
+      <div class="f-group fg-wide">
+        <label for="t-desc">Description <span class="req">*</span> <span style="font-weight:400;color:var(--gray-text)">— what this movement was for</span></label>
+        <input id="t-desc" maxlength="140" placeholder="e.g. County filing fee for appointment petition">
+        <div class="err" id="terr-desc"></div>
+      </div>
+      <div class="f-group" id="group-payee">
+        <label for="t-payee">Paid by / to whom <span style="font-weight:400;color:var(--gray-text)">(disbursement &amp; reimbursable)</span></label>
+        <input id="t-payee" maxlength="120" placeholder="e.g. Sunrise Funeral / Executor (self)">
+        <div class="err" id="terr-payee"></div>
+      </div>
+      <div class="f-group" id="group-beneficiary" hidden>
+        <label for="t-benef">Beneficiary <span class="req">*</span> — who received it</label>
+        <input id="t-benef" maxlength="120" placeholder="e.g. Alice Marshal (daughter)">
+        <div class="err" id="terr-benef"></div>
+      </div>
+      <div class="f-group">
+        <label for="t-ref">Reference / check # <span style="font-weight:400;color:var(--gray-text)">(optional)</span></label>
+        <input id="t-ref" maxlength="60" placeholder="e.g. check 1042 / wire 3/11">
+      </div>
+    </div>
+    <div class="btn-row">
+      <button type="submit" class="btn btn-navy" id="btn-save-tx">Add transaction</button>
+      <button type="button" class="btn btn-ghost" id="btn-cancel-tx" hidden>Cancel edit</button>
+    </div>
+  </form>
+
+  <!-- running cash view -->
+  <div class="totals" id="ledger-totals">
+    <div class="tot-head">Running balances</div>
+    <div class="tot-cols">
+      <div class="tot-col">
+        <div class="tot-col-t">Principal</div>
+        <div class="tot-line"><span>In</span><b id="p-in">$0.00</b></div>
+        <div class="tot-line"><span>Out</span><b id="p-out">$0.00</b></div>
+        <div class="tot-line"><span>Distributed</span><b id="p-distr">$0.00</b></div>
+        <div class="tot-line"><span>Executor to be repaid</span><b id="p-reimb">$0.00</b></div>
+        <div class="tot-line balance"><span>Cash on hand</span><b id="p-cash">$0.00</b></div>
+      </div>
+      <div class="tot-col">
+        <div class="tot-col-t">Income</div>
+        <div class="tot-line"><span>In</span><b id="i-in">$0.00</b></div>
+        <div class="tot-line"><span>Out</span><b id="i-out">$0.00</b></div>
+        <div class="tot-line"><span>Distributed</span><b id="i-distr">$0.00</b></div>
+        <div class="tot-line balance"><span>Cash on hand</span><b id="i-cash">$0.00</b></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- table -->
+  <div id="tx-table-wrap" class="table-wrap">
+    <table class="tbl" id="tx-table">
+      <thead><tr><th>Date</th><th>Description</th><th>Type</th><th class="r">Amount</th><th></th></tr></thead>
+      <tbody id="tx-tbody"></tbody>
+    </table>
+  </div>
+  <div class="empty mini" id="tx-empty" hidden>
+    <p><b>No transactions yet.</b> Record movements as they happen — interest, payments, sales, distributions.</p>
+  </div>
+</div>
+<!-- ============ REPORT (D5) ============ -->
+<div class="panel" id="panel-report">
+  <div class="rpt-head">
+    <h2>Summary of Account</h2>
+    <p class="hint" id="rpt-sub">The charge-and-discharge statement the court expects — assembled automatically from your assets and ledger.</p>
+  </div>
+
+  <div id="rpt-noestate" class="empty" hidden>
+    <p><b>No estate selected.</b> Create an estate in Setup first.</p>
+  </div>
+
+  <div id="rpt-body" hidden>
+    <!-- red flags -->
+    <div class="flags" id="rpt-flags"></div>
+
+    <!-- court document -->
+    <div class="doc rpt-doc">
+      <div class="doc-title">STATEMENT OF RECEIPTS AND DISBURSEMENTS<br><span style="font-size:13px;letter-spacing:.02em">FINAL ACCOUNT</span></div>
+      <div class="doc-caption">In the Matter of the Estate of <b id="rpt-dec">—</b>, Deceased<span id="rpt-case"></span></div>
+      <div class="doc-caption" id="rpt-court">Filed by the Executor · State: <span id="rpt-state">—</span></div>
+
+      <div class="rpt-cols">
+        <div class="rpt-col">
+          <h4 class="rc-h">CHARGES</h4>
+          <div class="doc-row"><span>Inventory of assets at date of death</span><span id="rc-inv"></span></div>
+          <div class="doc-row"><span>Receipts — Principal</span><span id="rc-rep"></span></div>
+          <div class="doc-row"><span>Receipts — Income</span><span id="rc-rei"></span></div>
+          <div class="doc-row"><span>Gains on sales</span><span id="rc-gains"></span></div>
+          <div class="doc-row total"><span>TOTAL CHARGES</span><b id="rc-tot"></b></div>
+        </div>
+        <div class="rpt-col">
+          <h4 class="rc-h">CREDITS</h4>
+          <div class="doc-row"><span>Disbursements — Principal</span><span id="rd-disbP"></span></div>
+          <div class="doc-row"><span>Disbursements — Income</span><span id="rd-disbI"></span></div>
+          <div class="doc-row"><span>Losses on sales</span><span id="rd-losses"></span></div>
+          <div class="doc-row"><span>Distributions to beneficiaries</span><span id="rd-distr"></span></div>
+          <div class="doc-row"><span>Property on hand at end of period</span><span id="rd-onhand"></span></div>
+          <div class="doc-row total"><span>TOTAL CREDITS</span><b id="rd-tot"></b></div>
+        </div>
+      </div>
+      <div class="doc-total" id="balance-ok">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        TOTAL CHARGES = TOTAL CREDITS — ACCOUNT BALANCED
+      </div>
+      <div class="doc-total bal-bad" id="balance-bad" hidden></div>
+      <div class="rpt-memo" id="rpt-memo"></div>
+      <div class="oath">
+        <p style="margin-bottom:10px">The undersigned executor states that the foregoing is a true and correct account of all estate property received and disbursed during the accounting period.</p>
+        <div class="oath-line">Executor Signature: <span class="line"></span> &nbsp; Date: <span class="line short"></span></div>
+        <div class="oath-line">Sworn to and subscribed before me on this ____ day of ____________, 20____</div>
+      </div>
+    </div>
+
+    <!-- schedules -->
+    <h3 class="sub-h">Schedule A — Principal &amp; Income Receipts</h3>
+    <div class="table-wrap"><table class="tbl" id="sched-recv">
+      <thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="r">Amount</th></tr></thead>
+      <tbody></tbody></table></div>
+
+    <h3 class="sub-h">Schedule of Disbursements</h3>
+    <div class="table-wrap"><table class="tbl" id="sched-disb">
+      <thead><tr><th>Date</th><th>Payee / Purpose</th><th>Account</th><th class="r">Amount</th></tr></thead>
+      <tbody></tbody></table></div>
+
+    <h3 class="sub-h">Schedule of Distributions</h3>
+    <div class="table-wrap"><table class="tbl" id="sched-dist">
+      <thead><tr><th>Date</th><th>Beneficiary</th><th class="r">Amount</th></tr></thead>
+      <tbody></tbody></table></div>
+
+    <h3 class="sub-h" id="sched-sales-h">Schedule of Sales</h3>
+    <div class="table-wrap" id="sched-sales-wrap"><table class="tbl" id="sched-sales">
+      <thead><tr><th>Date</th><th>Asset</th><th class="r">DOD value</th><th class="r">Net proceeds</th><th class="r">Gain/Loss</th></tr></thead>
+      <tbody></tbody></table></div>
+
+    <!-- non probate note -->
+    <div class="note-box" id="rpt-nonprobate" hidden>
+      <b>Passing outside probate (not included above):</b>
+      <div id="nonprobate-list"></div>
+    </div>
+
+    <p class="disclaimer" style="margin-top:18px">This statement is an organizing record built from the entries you recorded. Confirm your court's required format before filing — some courts mandate their own forms. Not legal advice.</p>
+
+    <div class="btn-row">
+      <button class="btn btn-navy" id="btn-print-report">Print / Save as PDF</button>
+      <button class="btn btn-ghost" id="btn-csv-report">Export CSV</button>
+    </div>
+  </div>
+</div>
+<!-- ============ EXPORT (D6) ============ -->
+<div class="panel" id="panel-export">
+  <h2>Backup &amp; Export</h2>
+  <p class="hint">Your records live in this browser only — make backups a habit. A backup file can be restored on any device.</p>
+
+  <div class="exp-grid">
+    <div class="exp-card">
+      <h3>JSON backup / restore</h3>
+      <p>Full data: all estates, assets, transactions, sales. Restore replaces everything in this browser.</p>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-navy" id="btn-json-download">Download backup (.json)</button>
+        <button class="btn btn-ghost" id="btn-json-upload">Restore backup…</button>
+      </div>
+      <p class="tiny-hint" id="restore-note" hidden></p>
+    </div>
+
+    <div class="exp-card">
+      <h3>Summary of Account (.csv)</h3>
+      <p>The court-format report as a spreadsheet for your attorney or accountant.</p>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-ghost" id="btn-csv-totals">Export account CSV</button>
+      </div>
+      <p class="tiny-hint" style="margin-top:8px">The printable version is in the <a href="#" data-goto-tab="report">Account tab</a> → Print.</p>
+    </div>
+
+    <div class="exp-card">
+      <h3>Assets &amp; Ledger (CSV)</h3>
+      <p>Raw inventory and ledger tables for quick review.</p>
+      <div class="btn-row" style="margin-top:10px">
+        <button class="btn btn-ghost" id="btn-csv-assets">Inventory CSV</button>
+        <button class="btn btn-ghost" id="btn-csv-ledger">Ledger CSV</button>
+      </div>
+    </div>
+  </div>
+  <p class="reminder"><b>Reminder:</b> every week, or after any batch of changes, download the backup. Nothing is stored on any server — cleared browser data erases the ledger.</p>
+</div>
+
+<!-- Sale modal (D4) -->
+<div class="modal" id="modal-sale" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <h3 id="sale-title">Record sale</h3>
+    <p id="sale-asset-line" style="margin-bottom:14px"></p>
+    <form id="form-sale" novalidate>
+      <div class="f-grid">
+        <div class="f-group">
+          <label for="s-date">Sale date <span class="req">*</span></label>
+          <input type="date" id="s-date">
+          <div class="err" id="serr-date"></div>
+        </div>
+        <div class="f-group">
+          <label>Proceeds</label>
+          <div style="display:flex;gap:10px;align-items:center">
+            <label style="font-weight:400;display:flex;gap:5px;align-items:center;margin:0"><input type="radio" name="s-mode" value="net" checked style="width:auto"> Net proceeds</label>
+            <label style="font-weight:400;display:flex;gap:5px;align-items:center;margin:0"><input type="radio" name="s-mode" value="gross" style="width:auto"> Gross + expenses</label>
+          </div>
+        </div>
+        <div class="f-group" id="sg-net">
+          <label for="s-net">Net proceeds (after expenses) <span class="req">*</span></label>
+          <input id="s-net" inputmode="decimal" placeholder="e.g. 11,500.00">
+        </div>
+        <div class="f-group" id="sg-gross" hidden>
+          <label for="s-gross">Gross proceeds <span class="req">*</span></label>
+          <input id="s-gross" inputmode="decimal" placeholder="e.g. 12,000.00">
+        </div>
+        <div class="f-group" id="sg-exp" hidden>
+          <label for="s-exp">Sale expenses (commissions, closing) <span class="req">*</span></label>
+          <input id="s-exp" inputmode="decimal" placeholder="e.g. 500.00">
+          <div class="hintfield">Used to compute net = gross − expenses.</div>
+        </div>
+        <div class="f-group fg-wide" id="sg-expdet" hidden>
+          <label for="s-expdet">What the expenses were (optional)</label>
+          <input id="s-expdet" maxlength="120" placeholder="e.g. brokerage commission">
+        </div>
+        <div class="f-group fg-wide">
+          <label for="s-ref">Reference (optional)</label>
+          <input id="s-ref" maxlength="80" placeholder="e.g. escrow 2025-03">
+        </div>
+      </div>
+      <div class="sale-preview" id="sale-preview" hidden></div>
+      <div class="err" id="serr-general" style="margin-top:8px"></div>
+      <div class="btn-row">
+        <button type="button" class="btn btn-ghost" id="btn-cancel-sale">Cancel</button>
+        <button type="submit" class="btn btn-navy" id="btn-confirm-sale">Record sale</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Confirm-delete modal -->
+<div class="modal" id="modal-delete" role="dialog" aria-modal="true">
+  <div class="modal-card">
+    <h3>Delete this estate?</h3>
+    <p>The estate record (setup, assets, ledger) will be permanently removed from this browser. Download a backup first if you need the data.</p>
+    <div class="btn-row">
+      <button class="btn btn-ghost" id="btn-cancel-delete">Cancel</button>
+      <button class="btn" style="background:var(--red);color:#fff" id="btn-confirm-delete">Delete permanently</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/sample-estate.js"></script>
+<script src="js/app.js"></script>
+<div class="toasts" id="toasts"></div>
+</body>
+</html>
