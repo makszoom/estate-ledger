@@ -130,6 +130,37 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 .sale-preview .lp{color:var(--red);font-weight:700}
 .sold-badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:12px;background:var(--navy);color:#fff;margin-left:6px;vertical-align:middle}
 
+
+/* ===== Report panel (D5) ===== */
+.rpt-doc{transform:none;max-width:880px;margin:0 auto}
+.rpt-cols{display:grid;grid-template-columns:1fr 1fr;gap:28px;margin-top:8px}
+.rc-h{font-size:13px;letter-spacing:.12em;color:var(--navy);border-bottom:2px solid var(--navy);padding-bottom:8px;margin-bottom:10px;text-align:center}
+.rpt-col .doc-row{font-size:13.5px}
+.rpt-col .doc-row.total{border-top:2px solid var(--ink);font-weight:700;margin-top:6px;padding-top:8px}
+.bal-bad{background:var(--red)}
+.rpt-memo{font-size:12.5px;color:#8A5A00;margin-top:10px;text-align:center}
+.rpt-memo:empty{display:none}
+.oath{margin-top:22px;font-family:Georgia,serif;font-size:13px;color:var(--ink);border-top:1px solid var(--border);padding-top:14px}
+.oath-line{margin:6px 0}
+.oath .line{display:inline-block;border-bottom:1px solid var(--ink);width:220px}
+.oath .line.short{width:110px}
+.flags{max-width:880px;margin:0 auto 18px}
+.flag-item{display:flex;gap:10px;padding:10px 14px;border-radius:8px;margin-bottom:8px;font-size:14px;align-items:baseline}
+.flag-item.red{background:#FBEAEA;color:var(--red);border:1px solid #EFD3D3}
+.flag-item.amber{background:#FDF3E0;color:#8A5A00;border:1px solid #F0E0C0}
+.sub-h{font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);margin:26px 0 10px;font-weight:700}
+.note-box{background:#F2F4F8;border-radius:var(--radius);padding:14px 18px;font-size:14px;max-width:880px;margin:14px auto 0}
+.rpt-head{margin-bottom:20px}
+@media print {
+  .topbar,.tabs,.banner,.flags,#rpt-flags,.btn-row,.sub-h{display:none!important}
+  body{background:#fff}
+  .panel{display:block!important;max-width:100%;padding:0}
+  .doc{border:none;box-shadow:none}
+  .rpt-cols{gap:16px}
+  section{page-break-inside:avoid}
+}
+@media(max-width:720px){.rpt-cols{grid-template-columns:1fr}}
+
 @media(max-width:640px){
   .f-grid{grid-template-columns:1fr}
   .tot-cols{grid-template-columns:1fr}
@@ -391,7 +422,93 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
   </div>
 </div>
 <!-- ============ REPORT (D5) ============ -->
-<div class="panel" id="panel-report"><h2>Summary of Account</h2><p class="hint">Day 5 — charge-and-discharge report.</p></div>
+<div class="panel" id="panel-report">
+  <div class="rpt-head">
+    <h2>Summary of Account</h2>
+    <p class="hint" id="rpt-sub">The charge-and-discharge statement the court expects — assembled automatically from your assets and ledger.</p>
+  </div>
+
+  <div id="rpt-noestate" class="empty" hidden>
+    <p><b>No estate selected.</b> Create an estate in Setup first.</p>
+  </div>
+
+  <div id="rpt-body" hidden>
+    <!-- red flags -->
+    <div class="flags" id="rpt-flags"></div>
+
+    <!-- court document -->
+    <div class="doc rpt-doc">
+      <div class="doc-title">STATEMENT OF RECEIPTS AND DISBURSEMENTS<br><span style="font-size:13px;letter-spacing:.02em">FINAL ACCOUNT</span></div>
+      <div class="doc-caption">In the Matter of the Estate of <b id="rpt-dec">—</b>, Deceased<span id="rpt-case"></span></div>
+      <div class="doc-caption" id="rpt-court">Filed by the Executor · State: <span id="rpt-state">—</span></div>
+
+      <div class="rpt-cols">
+        <div class="rpt-col">
+          <h4 class="rc-h">CHARGES</h4>
+          <div class="doc-row"><span>Inventory of assets at date of death</span><span id="rc-inv"></span></div>
+          <div class="doc-row"><span>Receipts — Principal</span><span id="rc-rep"></span></div>
+          <div class="doc-row"><span>Receipts — Income</span><span id="rc-rei"></span></div>
+          <div class="doc-row"><span>Gains on sales</span><span id="rc-gains"></span></div>
+          <div class="doc-row total"><span>TOTAL CHARGES</span><b id="rc-tot"></b></div>
+        </div>
+        <div class="rpt-col">
+          <h4 class="rc-h">CREDITS</h4>
+          <div class="doc-row"><span>Disbursements — Principal</span><span id="rd-disbP"></span></div>
+          <div class="doc-row"><span>Disbursements — Income</span><span id="rd-disbI"></span></div>
+          <div class="doc-row"><span>Losses on sales</span><span id="rd-losses"></span></div>
+          <div class="doc-row"><span>Distributions to beneficiaries</span><span id="rd-distr"></span></div>
+          <div class="doc-row"><span>Property on hand at end of period</span><span id="rd-onhand"></span></div>
+          <div class="doc-row total"><span>TOTAL CREDITS</span><b id="rd-tot"></b></div>
+        </div>
+      </div>
+      <div class="doc-total" id="balance-ok">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>
+        TOTAL CHARGES = TOTAL CREDITS — ACCOUNT BALANCED
+      </div>
+      <div class="doc-total bal-bad" id="balance-bad" hidden></div>
+      <div class="rpt-memo" id="rpt-memo"></div>
+      <div class="oath">
+        <p style="margin-bottom:10px">The undersigned executor states that the foregoing is a true and correct account of all estate property received and disbursed during the accounting period.</p>
+        <div class="oath-line">Executor Signature: <span class="line"></span> &nbsp; Date: <span class="line short"></span></div>
+        <div class="oath-line">Sworn to and subscribed before me on this ____ day of ____________, 20____</div>
+      </div>
+    </div>
+
+    <!-- schedules -->
+    <h3 class="sub-h">Schedule A — Principal &amp; Income Receipts</h3>
+    <div class="table-wrap"><table class="tbl" id="sched-recv">
+      <thead><tr><th>Date</th><th>Description</th><th>Account</th><th class="r">Amount</th></tr></thead>
+      <tbody></tbody></table></div>
+
+    <h3 class="sub-h">Schedule of Disbursements</h3>
+    <div class="table-wrap"><table class="tbl" id="sched-disb">
+      <thead><tr><th>Date</th><th>Payee / Purpose</th><th>Account</th><th class="r">Amount</th></tr></thead>
+      <tbody></tbody></table></div>
+
+    <h3 class="sub-h">Schedule of Distributions</h3>
+    <div class="table-wrap"><table class="tbl" id="sched-dist">
+      <thead><tr><th>Date</th><th>Beneficiary</th><th class="r">Amount</th></tr></thead>
+      <tbody></tbody></table></div>
+
+    <h3 class="sub-h" id="sched-sales-h">Schedule of Sales</h3>
+    <div class="table-wrap" id="sched-sales-wrap"><table class="tbl" id="sched-sales">
+      <thead><tr><th>Date</th><th>Asset</th><th class="r">DOD value</th><th class="r">Net proceeds</th><th class="r">Gain/Loss</th></tr></thead>
+      <tbody></tbody></table></div>
+
+    <!-- non probate note -->
+    <div class="note-box" id="rpt-nonprobate" hidden>
+      <b>Passing outside probate (not included above):</b>
+      <div id="nonprobate-list"></div>
+    </div>
+
+    <p class="disclaimer" style="margin-top:18px">This statement is an organizing record built from the entries you recorded. Confirm your court's required format before filing — some courts mandate their own forms. Not legal advice.</p>
+
+    <div class="btn-row">
+      <button class="btn btn-navy" id="btn-print-report">Print / Save as PDF</button>
+      <button class="btn btn-ghost" id="btn-csv-report">Export CSV</button>
+    </div>
+  </div>
+</div>
 <!-- ============ EXPORT (D6) ============ -->
 <div class="panel" id="panel-export"><h2>Backup &amp; Export</h2><p class="hint">Day 6 — JSON backup / CSV / print.</p></div>
 

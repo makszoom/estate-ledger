@@ -45,7 +45,20 @@
     sExpdet: $('s-expdet'), sRef: $('s-ref'),
     sgNet: $('sg-net'), sgGross: $('sg-gross'), sgExp: $('sg-exp'), sgExpdet: $('sg-expdet'),
     sPreview: $('sale-preview'), sErrDate: $('serr-date'), sErrGen: $('serr-general'),
-    sCancel: $('btn-cancel-sale'), sSave: $('btn-confirm-sale')
+    sCancel: $('btn-cancel-sale'), sSave: $('btn-confirm-sale'),
+    // D5 report
+    rptSub: $('rpt-sub'), rptNo: $('rpt-noestate'), rptBody: $('rpt-body'),
+    rptFlags: $('rpt-flags'), rptDec: $('rpt-dec'), rptCase: $('rpt-case'),
+    rptState: $('rpt-state'),
+    rcInv: $('rc-inv'), rcRep: $('rc-rep'), rcRei: $('rc-rei'), rcGains: $('rc-gains'),
+    rcTot: $('rc-tot'),
+    rdDisbP: $('rd-disbP'), rdDisbI: $('rd-disbI'), rdLosses: $('rd-losses'),
+    rdDistr: $('rd-distr'), rdOnhand: $('rd-onhand'), rdTot: $('rd-tot'),
+    balOk: $('balance-ok'), balBad: $('balance-bad'), rptMemo: $('rpt-memo'),
+    schedRecv: $('sched-recv'), schedDisb: $('sched-disb'), schedDist: $('sched-dist'),
+    schedSales: $('sched-sales'), schedSalesWrap: $('sched-sales-wrap'),
+    rptNonP: $('rpt-nonprobate'), nonPList: $('nonprobate-list'),
+    btnPrint: $('btn-print-report'), btnCsv: $('btn-csv-report')
   };
   let editingId = null;
   let deletingId = null;
@@ -559,6 +572,133 @@
     }
   });
 
+  // ---- D5: report rendering ----
+  function renderReport() {
+    const estateId = store.state.activeEstateId;
+    if (!estateId) { els.rptNo.hidden = false; els.rptBody.hidden = true; return; }
+    const repo = store.buildAccountReport(estateId);
+    if (!repo) { els.rptNo.hidden = false; els.rptBody.hidden = true; return; }
+    els.rptNo.hidden = true; els.rptBody.hidden = false;
+
+    // flags
+    els.rptFlags.innerHTML = '';
+    (repo.redFlags || []).forEach(f => {
+      const div = document.createElement('div');
+      div.className = 'flag-item ' + (f.type === 'negative_cash' ? 'red' : 'amber');
+      div.textContent = f.message;
+      els.rptFlags.appendChild(div);
+    });
+
+    // court doc
+    els.rptDec.textContent = repo.estate.decedent || '—';
+    els.rptCase.textContent = repo.estate.caseNumber ? ', Case No. ' + repo.estate.caseNumber : '';
+    els.rptState.textContent = repo.estate.state || '—';
+    els.rcInv.textContent = fmtMoney(repo.charges.inventory);
+    els.rcRep.textContent = fmtMoney(repo.charges.receiptsPrincipal);
+    els.rcRei.textContent = fmtMoney(repo.charges.receiptsIncome);
+    els.rcGains.textContent = fmtMoney(repo.charges.gains);
+    els.rcTot.textContent = fmtMoney(repo.totals.charges);
+    els.rdDisbP.textContent = fmtMoney(repo.credits.disbursementsPrincipal);
+    els.rdDisbI.textContent = fmtMoney(repo.credits.disbursementsIncome);
+    els.rdLosses.textContent = fmtMoney(repo.credits.losses);
+    els.rdDistr.textContent = fmtMoney(repo.credits.distributions);
+    els.rdOnhand.textContent = fmtMoney(repo.credits.assetsOnHand);
+    els.rdTot.textContent = fmtMoney(repo.totals.credits);
+
+    const bal = repo.totals.balanced;
+    els.balOk.hidden = !bal;
+    els.balBad.hidden = bal;
+    els.balBad.textContent = 'TOTALS DO NOT MATCH — difference ' + fmtMoney(Math.abs(repo.balanceDiff)) +
+      (repo.balanceDiff > 0 ? ' (charges exceed credits)' : ' (credits exceed charges)') +
+      '. Check for missing receipts or over-recorded disbursements.';
+
+    els.rptMemo.textContent = repo.reimbursableMemo > 0
+      ? 'Memo: the executor has paid personally ' + fmtMoney(repo.reimbursableMemo) +
+        ' (recorded as reimbursable). Amount owed to the executor by the estate — not included in the account totals until repaid.' : '';
+
+    // schedules
+    fillSched(els.schedRecv, repo.scheduleReceipts.map(r =>
+      [r.date, r.description, r.account === 'income' ? 'Income' : 'Principal', fmtMoney(r.amount)]));
+    fillSched(els.schedDisb, repo.scheduleDisbursements.map(d =>
+      [d.date, d.payee ? d.description + ' — ' + d.payee : d.description,
+       d.account === 'income' ? 'Income' : 'Principal', fmtMoney(d.amount)]));
+    fillSched(els.schedDist, repo.scheduleDistributions.map(d =>
+      [d.date, d.beneficiary, fmtMoney(d.amount)]));
+    const sales = repo.scheduleSales || [];
+    els.schedSalesWrap.hidden = sales.length === 0;
+    els.schedSales.querySelector('tbody').innerHTML = sales.map(s0 => {
+      const cls = s0.direction === 'gain' ? 'gp' : s0.direction === 'loss' ? 'lp' : '';
+      const gl = s0.direction === 'none' ? '—' : `<span class="${cls}">${s0.direction === 'loss' ? '−' : ''}${fmtMoney(s0.gainOrLoss)}</span>`;
+      return `<tr><td>${esc(s0.date)}</td><td>${esc(assetName(repo, s0.assetId))}</td>` +
+        `<td class="r">${fmtMoney(s0.dodValue)}</td><td class="r">${fmtMoney(s0.netProceeds)}</td>` +
+        `<td class="r">${gl}</td></tr>`;
+    }).join('');
+
+    // non-probate
+    const np = repo.nonProbate || [];
+    els.rptNonP.hidden = !np.length;
+    els.nonPList.innerHTML = np.map(a => `· ${esc(a.name)} — ${fmtMoney(a.dodValue)}`).join('<br>');
+  }
+  function assetName(repo, id) {
+    // asset names kept in state; find via store
+    const estateId = store.state.activeEstateId;
+    if (!estateId) return 'asset';
+    const a = store.listAssets(estateId).find(x => x.id === id);
+    return a ? a.name : 'asset';
+  }
+  function fillSched(tableEl, rows) {
+    const tb = tableEl.querySelector('tbody');
+    tb.innerHTML = rows.length
+      ? rows.map(r => `<tr>${r.map(c => `<td>${esc(c)}</td>`).join('').replace(/(<td>)([\d,.\-]+(?:\.\d\d))(<\/td>)/g, '<td style="text-align:right">$2</td>')}</tr>`).join('')
+      : '<tr><td colspan="4" class="none">No entries</td></tr>';
+  }
+
+  els.btnPrint.addEventListener('click', () => window.print());
+  els.btnCsv.addEventListener('click', () => {
+    const estateId = store.state.activeEstateId;
+    const repo = store.buildAccountReport(estateId);
+    if (!repo) return;
+    const lines = [];
+    lines.push('Summary of Account');
+    lines.push('Estate of,' + (repo.estate.decedent || ''));
+    lines.push('Case number,' + repo.estate.caseNumber);
+    lines.push('');
+    lines.push('CHARGES,Amount');
+    lines.push('Inventory at date of death,' + repo.charges.inventory);
+    lines.push('Receipts Principal,' + repo.charges.receiptsPrincipal);
+    lines.push('Receipts Income,' + repo.charges.receiptsIncome);
+    lines.push('Gains on sales,' + repo.charges.gains);
+    lines.push('TOTAL CHARGES,' + repo.totals.charges);
+    lines.push('');
+    lines.push('CREDITS,Amount');
+    lines.push('Disbursements Principal,' + repo.credits.disbursementsPrincipal);
+    lines.push('Disbursements Income,' + repo.credits.disbursementsIncome);
+    lines.push('Losses on sales,' + repo.credits.losses);
+    lines.push('Distributions,' + repo.credits.distributions);
+    lines.push('Property on hand,' + repo.credits.assetsOnHand);
+    lines.push('TOTAL CREDITS,' + repo.totals.credits);
+    lines.push('');
+    lines.push('Schedule of Receipts');
+    lines.push('Date,Description,Account,Amount');
+    repo.scheduleReceipts.forEach(r => lines.push([r.date, '"' + r.description + '"', r.account, r.amount].join(',')));
+    lines.push('');
+    lines.push('Schedule of Disbursements');
+    lines.push('Date,Description,Payee,Account,Amount');
+    repo.scheduleDisbursements.forEach(d => lines.push([d.date, '"' + d.description + '"', '"' + d.payee + '"', d.account, d.amount].join(',')));
+    lines.push('');
+    lines.push('Schedule of Distributions');
+    lines.push('Date,Beneficiary,Description,Amount');
+    repo.scheduleDistributions.forEach(d => lines.push([d.date, '"' + d.beneficiary + '"', '"' + d.description + '"', d.amount].join(',')));
+    lines.push('');
+    lines.push('Schedule of Sales');
+    lines.push('Date,Asset,DOD value,Net proceeds,Direction,Gain/Loss');
+    repo.scheduleSales.forEach(s0 => lines.push([s0.date, '"' + assetName(repo, s0.assetId) + '"', s0.dodValue, s0.netProceeds, s0.direction, s0.gainOrLoss].join(',')));
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.download = 'summary-of-account-' + (repo.estate.decedent || '').replace(/\W+/g, '-').toLowerCase() + '.csv';
+    a.href = URL.createObjectURL(blob); a.click(); URL.revokeObjectURL(a.href);
+  });
+
   // ---- render (tab counts + panels) ----
   function render() {
     const e = store.getActive();
@@ -569,6 +709,7 @@
     const txs2 = (e && e.transactions && e.transactions.length) || 0;
     els.counts.ledger.hidden = !txs2; els.counts.ledger.textContent = txs2;
     renderLedger();
+    renderReport();
     els.counts.ledger.hidden = !txs; els.counts.ledger.textContent = txs;
     maybeShowBanner();
     fillForm();

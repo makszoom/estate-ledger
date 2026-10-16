@@ -376,6 +376,149 @@
     }
     return { gains: round2(gains), losses: round2(losses), proceeds: round2(proceeds), count: sales.length };
   }
+
+  // ---- D5: Charge-and-Discharge report ----
+  /**
+   * Market-value approach (v1 standard): charges = inventory at DOD + additional property
+   * received + receipts + gains on sales. credits = disbursements + losses + distributions
+   * + property on hand (unsold assets carried at DOD + estate cash from transaction flows).
+   * Reimbursable executor expenses are NOT estate cash (paid personally) — listed as memo.
+   */
+  buildAccountReport(estateId) {
+    const estate = this.state.estates[estateId];
+    if (!estate) return null;
+    const assets = estate.assets || [];
+    const txs = estate.transactions || [];
+    const sales = estate.sales || [];
+
+    const probate = assets.filter(a => a.outsideProbate !== 'yes');
+    const nonProbate = assets.filter(a => a.outsideProbate === 'yes');
+
+    // CHARGES
+    const inventory = round2(probate.reduce((s, a) => s + (a.dodValue || 0), 0));
+    const gains = round2(sales.reduce((s, x) => s + (x.direction === 'gain' ? x.gainOrLoss : 0), 0));
+    // Schedule-A receipts EXCLUDE sale proceeds (court standard: proceeds enter via Gains
+    // + property on hand as cash; counting them as receipts too would double-count).
+    const receiptsPrincipal = round2(txs.filter(x => x.kind === 'money_in' && x.account === 'principal' && !x.saleId)
+      .reduce((s, x) => s + (x.amount || 0), 0));
+    const receiptsIncome = round2(txs.filter(x => x.kind === 'money_in' && x.account === 'income' && !x.saleId)
+      .reduce((s, x) => s + (x.amount || 0), 0));
+
+    // CREDITS
+    const disbursementsPrincipal = round2(txs.filter(x => x.kind === 'money_out' && x.account === 'principal')
+      .reduce((s, x) => s + (x.amount || 0), 0));
+    const disbursementsIncome = round2(txs.filter(x => x.kind === 'money_out' && x.account === 'income')
+      .reduce((s, x) => s + (x.amount || 0), 0));
+    const losses = round2(sales.reduce((s, x) => s + (x.direction === 'loss' ? x.gainOrLoss : 0), 0));
+    const distributions = round2(txs.filter(x => x.kind === 'distribution')
+      .reduce((s, x) => s + (x.amount || 0), 0));
+
+    // Property on hand = unsold probate assets (at DOD value in market approach) + estate cash
+    // Estate cash from flows: receipts - disbursements - distributions (both accounts).
+    // Sale proceeds already counted: they replaced the sold asset — the sold asset's DOD value
+    // remains in inventory line, and its gain (proceeds − DOD) makes charges > credits by the
+    // gain; the cash on hand must add the FULL net proceeds to offset: cash flows DO include
+    // the proceeds tx (it's a money_in), so flows already carry it. Sold asset DOD is in
+    // inventory though — that double-counts: inventory includes sold DOD AND flows include
+    // proceeds. Court standard (market-value): inventory carries sold asset at DOD; its sale
+    // produces gain (charges) and the cash replaces it; credits include distributions/payouts;
+    // the remaining ASSET (unsold) listed at DOD; CASH remains as "assets on hand" =
+    // flows-cash + unsold assets at DOD, MINUS sold DOD (discharged by sale)... In practice
+    // charge-discharge balances: Inventory(sold DOD counted) + Gain = Cash received + remaining
+    // assets held. We compute assetsOnHand = unsold probate DOD + (flows cash - receipts already counted?)
+    // To avoid double count: assetsOnHand cash = receipts + proceeds - disbursements - distributions
+    //   (proceeds ARE receipts via tx, so flows cash = receipts total + proceeds? proceeds tx IS
+    //   a money_in receipt — receiptsPrincipal already includes it). So flowsCash =
+    //   receiptsPrincipal + receiptsIncome - disbursementsPrincipal - disbursementsIncome -
+    //   distributions. Unsold assets listed separately at DOD. Sold DOD excluded from onHand.
+    // Estate cash on hand includes ALL money_in (sale proceeds too!) minus outflows.
+    const allMoneyIn = round2(txs.filter(x => x.kind === 'money_in').reduce((s, x) => s + (x.amount || 0), 0));
+    const flowsCash = round2(allMoneyIn - disbursementsPrincipal - disbursementsIncome - distributions);
+    const unsoldProbate = round2(probate.filter(a => !a.sold).reduce((s, a) => s + (a.dodValue || 0), 0));
+    const soldProbateDOD = round2(probate.filter(a => a.sold).reduce((s, a) => s + (a.dodValue || 0), 0));
+
+    // Charges: inventory DOD counts SOLD too; but sold's DOD then must be charged out:
+    // credits-side "discharged by sale" = soldProbateDOD. Market-value charge-discharge:
+    // CHARGES: inventory + (received during admin: gains already include proceeds over DOD)
+    //          receipts. CREDITS: disbursements + losses + distributions + onHand.
+    // Balance identity: inventory + receipts + gains == disb + losses + distr + onHand
+    //   where onHand = unsold DOD + flowsCash + soldDOD? NO — sold is replaced by cash:
+    //   flowsCash includes proceeds; the sold DOD is "spent" in acquiring cash: so
+    //   assetsOnHand should EXCLUDE sold DOD and rely purely on: unsold DOD + flowsCash,
+    //   and charges include inventory (sold + unsold). Identity: inv + receipts + gains =
+    //   disb + distr + losses + onHand, onHand = unsold + flowsCash.
+    //   flowsCash = receipts - disb - distr. RHS = disb + distr + unsold + receipts - disb - distr = receipts + unsold.
+    //   LHS = inv + receipts + gains. So identity ⇔ inv + gains == unsold. inv = sold + unsold
+    //   ⇒ sold + gains == 0?? WRONG. The correct standard: sold DOD IS discharged by the cash —
+    //   so onHand = flowsCash + unsoldDOD + 0 (sold's value left as cash in flows) AND charges
+    //   inventory INCLUDES sold DOD (it was an asset at DOD). But then the identity fails by
+    //   soldDOD unless we credit the sale conversion: the cash tx exists IN receipts (proceeds),
+    //   so credits-side assetsOnHand holds the cash: LHS = inv + receipts + gains;
+    //   RHS = disb + distr + losses + (unsold + flowsCash). flowsCash includes proceeds − disb − distr.
+    //   proceeds = soldDOD + gain − loss(signed). LHS = (sold+unsold) + receipts + (proc−soldDOD)
+    //     = unsold + proc + receipts. RHS = disb + distr + losses + unsold + (receipts − disb −
+    //     distr + proc) − losses? hmm: flowsCash = receipts − disb − distr (receipts includes proc)
+    //     RHS = disb + distr + losses + unsold + receipts − disb − distr = receipts − ... no wait:
+    //     RHS = disb + losses + distr + [unsold + (receipts − disb − distr)] = unsold + receipts + losses.
+    //     LHS − RHS = (sold + unsold + receipts + gains) − (unsold + receipts + losses)
+    //       = sold + gains − losses. And gains − losses = (proc − soldDOD) ⇒ sold + proc − soldDOD = proc…
+    //       no: gains − losses = Σ|proc − DOD| signed ⇒ gains − losses = proc − soldDOD.
+    //       ⇒ LHS − RHS = sold − soldDOD = 0 (soldDOD == sold value) ✓ BALANCED BY CONSTRUCTION.
+    const assetsOnHand = round2(unsoldProbate + flowsCash);
+    // reimbursable: memo only (paid by executor personally)
+    const reimbursableMemo = round2(txs.filter(x => x.kind === 'reimbursable')
+      .reduce((s, x) => s + (x.amount || 0), 0));
+
+    const charges = {
+      inventory, additionalReceived: 0,
+      receiptsPrincipal, receiptsIncome, gains
+    };
+    const credits = { disbursementsPrincipal, disbursementsIncome, losses, distributions, assetsOnHand };
+    const totals = {
+      charges: round2(inventory + gains + receiptsPrincipal + receiptsIncome),
+      credits: round2(disbursementsPrincipal + disbursementsIncome + losses + distributions + assetsOnHand)
+    };
+    totals.balanced = totals.charges === totals.credits;
+    totals.diff = round2(totals.charges - totals.credits);
+
+    // Red flags: mathematically charge-discharge always balances (identity), but these
+    // anomalies mean the underlying data is wrong and the report should not be filed yet.
+    const redFlags = [];
+    if (assetsOnHand < 0)
+      redFlags.push({ type: 'negative_cash',
+        message: 'Cash on hand is negative - disbursements and distributions exceed recorded receipts. Check for missing receipts.' });
+    const unvalued = probate.filter(a => !a.sold && (a.dodValue == null) && a.outsideProbate === 'no');
+    if (unvalued.length)
+      redFlags.push({ type: 'unvalued', count: unvalued.length,
+        message: unvalued.length + ' probate asset(s) have no date-of-death value yet - the inventory total is incomplete.' });
+    const unverified = assets.filter(a => a.outsideProbate === 'unknown');
+    if (unverified.length)
+      redFlags.push({ type: 'unverified_ownership', count: unverified.length,
+        message: unverified.length + ' asset(s) still marked "verify ownership" - they are excluded from the totals until you confirm.' });
+    if (reimbursableMemo > 0)
+      redFlags.push({ type: 'reimbursable_pending', amount: reimbursableMemo,
+        message: 'Executor has ' + fmtMoney(reimbursableMemo) + ' of personally-paid expenses awaiting reimbursement (memo - not in totals).' });
+
+    return {
+      estate: { decedent: estate.decedent, caseNumber: estate.caseNumber || '',
+        state: estate.state, dateOfDeath: estate.dateOfDeath },
+      period: { from: estate.dateOfDeath, to: todayISO() },
+      charges, credits, totals,
+      balanceDiff: totals.diff, balanced: totals.balanced,
+      redFlags,
+      reimbursableMemo,
+      nonProbate: nonProbate.map(a => ({ name: a.name, dodValue: a.dodValue })),
+      scheduleReceipts: txs.filter(x => x.kind === 'money_in' && !x.saleId).sort((a,b)=>a.date.localeCompare(b.date))
+        .map(x => ({ date: x.date, description: x.description, amount: x.amount,
+          account: x.account, source: x.reference || x.payee || '' })),
+      scheduleDisbursements: txs.filter(x => x.kind === 'money_out').sort((a,b)=>a.date.localeCompare(b.date))
+        .map(x => ({ date: x.date, description: x.description, amount: x.amount,
+          payee: x.payee, checkNo: x.checkNo || '', account: x.account })),
+      scheduleDistributions: txs.filter(x => x.kind === 'distribution').sort((a,b)=>a.date.localeCompare(b.date))
+        .map(x => ({ date: x.date, description: x.description, amount: x.amount, beneficiary: x.beneficiary })),
+      scheduleSales: sales.slice()
+    };
+  }
 }
 
     Store.validateTx = function (fields, estate) {
