@@ -19,6 +19,15 @@ function send(m,pa,sid){return new Promise((res,rej)=>{const id=++mid;pend.set(i
   await J("localStorage.clear()");
   await send("Page.enable",{},sid); await send("Page.reload",{ignoreCache:true},sid);
   await new Promise(r=>setTimeout(r,1500));
+  // live-safety: state may survive (localStorage partition) — force clean until 0
+  for (let k=0;k<4;k++){
+    const cnt = await J("(function(){try{return Object.keys(JSON.parse(localStorage.getItem('el_state')||'{}').estates||{}).length;}catch(e){return 0;}})()");
+    if (!cnt) break;
+    await J("localStorage.clear(); location.reload();");
+    await new Promise(r=>setTimeout(r,1800));
+  }
+  const cnt0 = await J("(function(){try{return Object.keys(JSON.parse(localStorage.getItem('el_state')||'{}').estates||{}).length;}catch(e){return 0;}})()");
+  ok("clean state at start", cnt0 === 0 || cnt0 === 'ERR' || !cnt0, 'got ' + cnt0);
 
   // create 3 estates via UI
   async function makeEstate(name, state){
