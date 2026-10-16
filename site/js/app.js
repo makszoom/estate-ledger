@@ -6,6 +6,7 @@
   'use strict';
   const { Store, US_STATES, ROLES, fmtMoney } = window.EstateLedgerCore;
   const store = new Store();
+  window.__ELStore = store;  // test/e2e access (read-only usage)
 
   const $ = (id) => document.getElementById(id);
   const els = {

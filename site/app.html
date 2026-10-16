@@ -152,7 +152,8 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 .note-box{background:#F2F4F8;border-radius:var(--radius);padding:14px 18px;font-size:14px;max-width:880px;margin:14px auto 0}
 .rpt-head{margin-bottom:20px}
 @media print {
-  .topbar,.tabs,.banner,.flags,#rpt-flags,.btn-row,.sub-h{display:none!important}
+  .topbar,.tabs,.banner,.flags,#rpt-flags,.btn-row,.sub-h,.doc-basis-badge{display:none!important}
+  .doc-basis-note{display:block!important}  /* carry-court: disclaimer must print */
   body{background:#fff}
   .panel{display:block!important;max-width:100%;padding:0}
   .doc{border:none;box-shadow:none}
@@ -195,6 +196,12 @@ input:focus,select:focus{border-color:var(--navy);box-shadow:0 0 0 3px rgba(30,5
 .doc-basis-badge{display:inline-block;font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;color:#fff;background:#5A6B87;border-radius:6px;padding:4px 10px;margin-bottom:10px}
 .doc-basis-badge.carry{background:var(--navy,#1E3A5F)}
 .doc-basis-note{font-size:13px;color:#5A5F6A;font-style:italic;margin-bottom:14px;display:none}
+
+.doc-total{margin-top:18px;background:var(--green,#2D6A4F);color:#fff;text-align:center;padding:10px;border-radius:6px;font-size:14px;font-weight:600;display:flex;justify-content:center;gap:8px;align-items:center}
+.bal-bad{background:#B00020}
+.doc-total[hidden]{display:none!important}  /* hidden must beat display:flex (csvtojson Day-1 lesson) */
+
+.doc-row.total{font-weight:700;border-top:2px solid #1A1A1A;margin-top:6px;padding-top:8px}
 </style>
 </head>
 <body>
