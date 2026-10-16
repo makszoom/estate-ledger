@@ -51,14 +51,14 @@
   /** Default empty estate state */
   function emptyState() {
     return {
-      version: 1,
+      version: 2,
       estates: {},
       activeEstateId: null
     };
   }
   function emptyEstateFields() {
     return {
-      decedent: '', caseNumber: '', state: '', role: 'executor',
+      decedent: '', caseNumber: '', state: '', role: 'executor', accountingBasis: 'standard',
       dateOfDeath: '', createdAt: todayISO(), lastBackupReminder: todayISO(),
       assets: [], transactions: [], sales: []
     };
@@ -73,17 +73,29 @@
     }
     load() {
       const raw = this._load(STORAGE_KEY);
-      if (!raw) { this.state = emptyState(); return this.state; }
+      if (!raw) { this.state = emptyState(); this._migrate(); return this.state; }
       try {
         const parsed = JSON.parse(raw);
         if (!parsed || typeof parsed !== 'object' || !('estates' in parsed)) throw new Error('corrupt');
         this.state = parsed;
-        // migrate forward defensively
-        if (typeof parsed.version !== 'number') parsed.version = 1;
+        this._migrate();
       } catch (e) {
         this.state = emptyState();
+        this._migrate();
       }
       return this.state;
+    }
+    /** D9: schema migrations. v1 (no accountingBasis) → v2: every estate gets basis='standard' */
+    _migrate() {
+      if (!this.state || typeof this.state !== 'object') return;
+      if (typeof this.state.version !== 'number') this.state.version = 1;
+      if (this.state.version < 2) {
+        Object.values(this.state.estates || {}).forEach(e => {
+          if (!e.accountingBasis) e.accountingBasis = 'standard';
+        });
+        this.state.version = 2;
+        this.save();
+      }
     }
     save() {
       this._save(STORAGE_KEY, JSON.stringify(this.state));
@@ -123,6 +135,15 @@
       this.save();
       return true;
     }
+    /** D9: switch accounting approach. Data untouched; only report calculation changes. */
+    setAccountingBasis(estateId, basis) {
+      const estate = this.state.estates[estateId];
+      if (!estate) return { ok: false, errors: { general: 'Estate not found' } };
+      if (!['standard', 'carry'].includes(basis)) return { ok: false, errors: { accountingBasis: 'standard or carry only' } };
+      estate.accountingBasis = basis;
+      this.save();
+      return { ok: true };
+    }
     getActive() {
       return this.state.estates[this.state.activeEstateId] || null;
     }
@@ -142,6 +163,7 @@
     if (!('version' in parsed)) parsed.version = 1;
     if (typeof parsed.version !== 'number') return { ok: false, errors: 'Bad version' };
     this.state = parsed;
+    this._migrate();  // D9: old backups (v1) get accountingBasis added
     this.save();
     return { ok: true };
   }
@@ -153,6 +175,7 @@
     L.push('Summary of Account');
     L.push('Estate of,' + q(repo.estate.decedent || ''));
     L.push('Case number,' + q(repo.estate.caseNumber));
+    L.push('Accounting basis,' + q(repo.basis || 'standard'));  // D9 §0.12
     L.push('');
     L.push('CHARGES,Amount');
     L.push('Inventory at date of death,' + repo.charges.inventory);
@@ -445,9 +468,16 @@
    * + property on hand (unsold assets carried at DOD + estate cash from transaction flows).
    * Reimbursable executor expenses are NOT estate cash (paid personally) — listed as memo.
    */
-  buildAccountReport(estateId) {
+  buildAccountReport(estateId, opts) {
     const estate = this.state.estates[estateId];
     if (!estate) return null;
+    const basis = (opts && opts.basis) || estate.accountingBasis || 'standard';
+    // D9: standard (market value) and carry share the same charge-discharge math here:
+    // carrying value IS the DOD value we already track; v1 never re-values unsold assets,
+    // so no 'changes to inventory' section exists to drop. The modes differ in presentation
+    // (carry: CHARGES/CREDITS wording, disposition detail, no-market-value disclaimer) and
+    // the report carries its basis for the UI badge and CSV line.
+
     const assets = estate.assets || [];
     const txs = estate.transactions || [];
     const sales = estate.sales || [];
@@ -564,6 +594,7 @@
       estate: { decedent: estate.decedent, caseNumber: estate.caseNumber || '',
         state: estate.state, dateOfDeath: estate.dateOfDeath },
       period: { from: estate.dateOfDeath, to: todayISO() },
+      basis,
       charges, credits, totals,
       balanceDiff: totals.diff, balanced: totals.balanced,
       redFlags,
@@ -636,6 +667,8 @@
     }
     if (fields && fields.caseNumber && fields.caseNumber.length > 40) errs.caseNumber = 'Maximum 40 characters';
     if (fields && fields.role && !ROLES.includes(fields.role)) errs.role = 'Unknown role';
+    if (fields && fields.accountingBasis && !['standard','carry'].includes(fields.accountingBasis))
+      errs.accountingBasis = 'standard or carry only';
     return errs;
   };
 
