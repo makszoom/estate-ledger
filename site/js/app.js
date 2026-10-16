@@ -410,7 +410,7 @@
       if (x.payee) sub.push('to/by ' + x.payee);
       if (x.beneficiary) sub.push(x.beneficiary);
       if (x.reference) sub.push(x.reference);
-      const sign = x.kind === 'money_in' ? '' : '−';
+      const sign = x.kind === 'money_in' ? '' : x.kind === 'reimbursable' ? '' : '−';  // In/out/distr; reimbursable — не движение estate-денег
       tr.innerHTML = `<td>${esc(x.date)}</td>` +
         `<td><b>${esc(x.description)}</b>${sub.length ? `<div class="tx-sub">${esc(sub.join(' · '))}</div>` : ''}</td>` +
         `<td><span class="tx-kind k-${x.kind}">${KIND_LABELS[x.kind]}</span></td>` +
