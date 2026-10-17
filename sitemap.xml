@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://estateledger.app/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://estateledger.app/estate-inventory-template.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://estateledger.app/executor-accounting-spreadsheet.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://estateledger.app/final-accounting-probate.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://estateledger.app/receipts-disbursements-schedule.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://estateledger.app/probate-accounting.html</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://estateledger.app/executor-fee-calculator.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+</urlset>
