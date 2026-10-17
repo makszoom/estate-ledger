@@ -1,7 +1,7 @@
 ---
 name: estate-ledger
-version: 2.0.0
-updated: 2026-10-17 (v2 complete)
+version: 2.1.0
+updated: 2026-10-17 (v2 complete + domain LIVE)
 ---
 
 # AGENTS.md — Estate Ledger
@@ -12,13 +12,16 @@ updated: 2026-10-17 (v2 complete)
 
 | Key | Value |
 |-----|-------|
-| Live URL (github.io-фаза) | **https://makszoom.github.io/estate-ledger/** (LIVE 17.10, noindex до домена) |
-| Домен (план, отложен Максом 17.10) | https://estateledger.app |
-| Repo (fact) | **makszoom/estate-ledger** (создан 17.10 через GitHub API, Pages main/ enabled) |
+| **Live URL** | **https://estateledger.app** (домен LIVE 17.10, HTTPS enforced, canonical) |
+| GitHub.io (redirect-фаза) | https://makszoom.github.io/estate-ledger/ (работает параллельно; в SEO не используется) |
+| Repo | **makszoom/estate-ledger** (Pages main/, custom domain + https_enforced через GitHub API) |
+| DNS (CF) | 4×A 185.199.108-111.153 + CNAME www, все DNS only (proxy OFF обязателен) |
 | Hosting | GitHub Pages (13 файлов, deploy = Python requests + REST API, PAT из ~/Projects/csvtojson/.env) |
-| Монетизация | free-first → AdSense (лендинг/education при ≥5K pv/мес) + donate USDT modal (адрес ждёт Макса) |
-| GSC | pending (после домена) |
+| Монетизация | free-first → 3 канала при ≥5K pv (ROADMAP.md §Монетизация): donate/affiliate/крипто-сети — AdSense из РФ недоступен (деактивации авг 2024) |
+| GSC | ✅ sc-domain:estateledger.app verified (TXT через CF Authorize), sitemap submitted (7 URL), SA gsc-bot Full |
 | Analytics | Cloudflare Web Analytics (без куки, YMYL-clean) — пока НЕ подключен |
+| Donate | ✅ USDT TRC-20 `TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw` (общий OGFY-кошелёк, решение Макса) + Copy-кнопка, commit 8aa4198 |
+| Крон-дата решения | Д90 = 2027-01-15 (kill <300 pv/30д) |
 | Проект-папка | ~/Projects/estate-ledger |
 
 ## Architecture (план MVP)
@@ -45,7 +48,7 @@ estate-ledger/
 │   ├── receipts-disbursements-schedule.html # SEO 4
 │   ├── probate-accounting.html              # SEO 5 (education-хаб, глоссарий, state notes)
 │   ├── privacy.html
-│   ├── sitemap.xml           # github.io canonical (сменить при домене)
+│   ├── sitemap.xml           # estateledger.app URLs (7); canonical-теги на всех 9 страницах; корень КОРЕНЬ = Pages source
 │   ├── robots.txt
 │   ├── css/style.css          # Trust Legal палитра + Apple Design CSS
 │   ├── js/core.js             # ★ вся логика (649 строк): Store, assets, tx, sales, report, export
@@ -129,9 +132,12 @@ estate-ledger/
 | v2: Д12-13 bank CSV import (parse/dedupe/preview/commit) | ✅ 17.10 (cda0759) — 381 тест, LIVE 20/20 |
 | v2: Д18 multi-estate dashboard (cards/archive/restore) | ✅ 17.10 (f215662) — 472 теста, LIVE 19/19 |
 | v2: Д19-20 полировка (debug-sweep, vision-ревью всех вью, live-верификация) | ✅ 17.10 |
-| Домен estateledger.app | ⏸ ОТЛОЖЕН Максом 17.10 («давай отложим») |
-| USDT-кошелёк donate | ⏸ ждёт адрес от Макса (placeholder в модалке) |
-| GSC / AdSense / Reddit-FB посты | ⏸ после домена / 5K pv / руками Макса |
+| **Домен estateledger.app** | ✅ 17.10 — куплен ($8.20 1-й год, CF Registrar/oplatym), DNS через Edit-zone-DNS токен (.env), Pages cname + HTTPS enforced |
+| **Canonical + noindex снят** | ✅ 17.10 (commits 7fd71bb + 56bb7b6 fix root-duality: Pages отдаёт КОРЕНЬ, не site/!) |
+| **GSC** | ✅ 17.10 — TXT verify (Макс Authorize), SA Full, sitemap 7 URL submitted; URL inspection NEUTRAL → краул 1-7 дней |
+| **Donate USDT-модалка** | ✅ 17.10 (8aa4198) — адрес TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw (OGFY-кошелёк) + Copy-кнопка, live-verified |
+| Reddit-FB посты | ⏸ руками Макса (тексты готовы) |
+| Мониторинг трафика | gsc-monitor.py видит sc-domain:estateledger.app; первый чек 3-7 дней |
 
 ## V2 Development Plan (см. docs/V2-SPEC.md — полный)
 

@@ -44,9 +44,9 @@
 
 - Продукт: **v2 COMPLETE** — LIVE на https://makszoom.github.io/estate-ledger/ (Д0→Д20: carry-value, fee-calc 24 штата, bank CSV, CA worksheet, multi-estate dash)
 - Тесты: **473 PASS (238 unit + 235 e2e); live-набор против прода 118/118**
-- Домен: estateledger.app одобрен, покупает Макс через oplatym.ru (~$12 / год)
-- Donate: USDT TRC-20 — адрес ожидает от Макса (1 место в модалке лендинга)
-- noindex: снимаем при переезде на домен
+- Домен: ✅ **estateledger.app КУПЛЕН и LIVE 17.10** ($8.20 1-й год; DNS/Pages/HTTPS/GSC всё подключено; ренюв $14.20/год — следить ~10.2027!)
+- Donate: ✅ адрес TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw (OGFY-кошелёк) в модалке + Copy-кнопка (17.10)
+- noindex: ✅ снят 17.10 (canonical = estateledger.app на всех страницах; sitemap переиздан в GSC)
 - v2-фичи (carry/fees/CSV/worksheet/dash) уже построены 17.10 — не ждём триггеров (решение Макса, V2-SPEC.md); ROADMAP-триггеры выше остаются как исторические метрики + задел v3
 
 ## Монетизация (обновлено 17.10.2026 — решение после исследования AdSense-санкций)
