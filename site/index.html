@@ -1,407 +1,821 @@
 <!DOCTYPE html>
+
 <html lang="en">
+
 <head>
+
 <meta charset="UTF-8">
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <link rel="canonical" href="https://estateledger.app/">
+
 <title>Estate Ledger — Free Estate Accounting for US Executors</title>
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+
 <meta name="description" content="Track every asset, receipt, and distribution of an estate, then generate a balanced Summary of Account for the court. Free forever, no account, data stays local.">
+
 <!-- снимем при переходе на домен -->
+
 <style>
+
 /* ===== Trust Legal: root tokens ===== */
+
 :root{
+
   --bg:#FAFAF8; --ink:#1A1A1A; --navy:#1E3A5F; --navy-dark:#142B47;
+
   --green:#2D6A4F; --red:#B00020; --border:#E5E2DC;
+
   --gray-text:#5A5F6A; --card:#FFFFFF;
+
   --shadow-sm:0 1px 3px rgba(26,26,26,.06);
+
   --shadow-md:0 4px 16px rgba(26,26,26,.08);
+
   --radius:10px;
+
 }
+
 *{box-sizing:border-box;margin:0;padding:0}
+
 html{scroll-behavior:smooth}
+
 body{font-family:'Inter',-apple-system,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg);line-height:1.6;font-size:17px;-webkit-font-smoothing:antialiased}
+
 a{color:var(--navy);text-decoration:none}
+
 .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
 
+
+
 /* ===== Nav ===== */
+
 nav{background:var(--navy);color:#fff}
+
 .nav-in{max-width:1080px;margin:0 auto;padding:14px 24px;display:flex;align-items:center;gap:32px}
+
 .logo{font-family:Georgia,serif;font-size:20px;font-weight:700;color:#fff;letter-spacing:-.01em}
+
 .nav-links{display:flex;gap:24px;margin-left:auto}
+
 .nav-links a{color:rgba(255,255,255,.85);font-size:15px}
+
 .nav-links a:hover{color:#fff}
 
+
+
 /* ===== Hero ===== */
+
 .hero{padding:72px 0 64px;display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:center}
+
 .hero h1{font-size:44px;line-height:1.12;letter-spacing:-.02em;font-weight:800;color:var(--ink)}
+
 .hero .sub{margin:20px 0 28px;color:var(--gray-text);font-size:18px;max-width:480px}
+
 .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 26px;border-radius:8px;font-size:16px;font-weight:600;cursor:pointer;border:none;-webkit-tap-highlight-color:transparent}
+
 .btn:active{transform:scale(.97);transition:transform .1s ease-out}
+
 .btn-navy{background:var(--navy);color:#fff}
+
 .btn-navy:hover{background:var(--navy-dark)}
+
 .btn-ghost{background:#fff;color:var(--navy);border:1.5px solid var(--navy)}
+
 .btn-ghost:hover{background:#F2F4F8}
+
 .badges{display:flex;gap:16px;margin-top:24px;flex-wrap:wrap}
+
 .badge{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--gray-text)}
+
 .badge svg{color:var(--green);flex:none}
 
+
+
 /* ===== Court document card ===== */
+
 .doc{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:32px 28px;transform:rotate(-1.5deg);font-family:Georgia,serif}
+
 .doc .doc-title{text-align:center;font-size:15px;letter-spacing:.06em;color:var(--ink);border-bottom:2px solid var(--navy);padding-bottom:12px;margin-bottom:6px}
+
 .doc .doc-caption{text-align:center;font-size:12.5px;color:var(--gray-text);margin-bottom:18px}
+
 .doc-cols{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+
 .doc-col h4{font-size:12px;letter-spacing:.1em;color:var(--navy);border-bottom:1px solid var(--border);padding-bottom:6px;margin-bottom:10px;text-align:center}
+
 .doc-row{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;border-bottom:1px dotted #EEE}
+
 .doc-total{margin-top:18px;background:var(--green);color:#fff;text-align:center;padding:10px;border-radius:6px;font-family:'Inter',sans-serif;font-size:14px;font-weight:600;display:flex;justify-content:center;gap:8px;align-items:center}
 
+
+
 /* ===== Sections ===== */
+
 section{padding:64px 0}
+
 .sec-title{font-size:32px;font-weight:800;letter-spacing:-.02em;text-align:center;margin-bottom:12px}
+
 .sec-sub{text-align:center;color:var(--gray-text);max-width:620px;margin:0 auto 40px;font-size:17px}
 
+
+
 /* Comparison cards */
+
 .cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+
 .cmp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow-sm)}
+
 .cmp-card.ours{border:2px solid var(--navy)}
+
 .cmp-card h3{font-size:20px;margin-bottom:4px}
+
 .cmp-price{font-size:28px;font-weight:800;margin:10px 0 14px;letter-spacing:-.02em}
+
 .cmp-price.free{color:var(--green)}
+
 .cmp-card ul{list-style:none;font-size:14.5px;color:var(--gray-text)}
+
 .cmp-card li{padding:5px 0;border-bottom:1px dotted #F0EDE8}
+
 .cmp-note{text-align:center;font-size:13px;color:var(--gray-text);margin-top:24px}
 
+
+
 /* Steps */
+
 .steps{display:grid;grid-template-columns:repeat(3,1fr);gap:32px;max-width:900px;margin:0 auto}
+
 .step{text-align:center}
+
 .step-num{width:52px;height:52px;border-radius:50%;background:var(--navy);color:#fff;font-size:20px;font-weight:700;display:flex;align-items:center;justify-content:center;margin:0 auto 16px}
+
 .step h3{font-size:18px;margin-bottom:8px}
+
 .step p{font-size:14.5px;color:var(--gray-text)}
+
 .step .bal{display:inline-block;margin-top:10px;background:#EAF4EF;color:var(--green);font-size:13px;font-weight:600;padding:4px 12px;border-radius:20px}
 
+
+
 /* Features */
+
 .feat{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+
 .feat-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:24px}
+
 .feat-card:hover{box-shadow:var(--shadow-md)}
+
 .feat-card svg{color:var(--navy);margin-bottom:12px}
+
 .feat-card h3{font-size:16.5px;margin-bottom:6px}
+
 .feat-card p{font-size:14px;color:var(--gray-text)}
 
+
+
 /* Sample demo */
+
 .split{display:grid;grid-template-columns:1.4fr 1fr;gap:48px;align-items:center}
+
 .ledger-shot{background:#fff;border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);overflow:hidden}
+
 .ledger-shot .lh{background:var(--navy);color:#fff;display:grid;grid-template-columns:1fr 2.4fr 1fr 1fr;padding:10px 16px;font-size:12.5px;letter-spacing:.05em}
+
 .ledger-shot .lr{display:grid;grid-template-columns:1fr 2.4fr 1fr 1fr;padding:9px 16px;font-size:13.5px;border-bottom:1px solid #F2EFE9;color:var(--ink)}
+
 .ledger-shot .lr:last-child{background:#EAF4EF;color:var(--green);font-weight:700;border-bottom:none}
 
+
+
 /* FAQ */
+
 .faq{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:900px;margin:0 auto}
+
 details{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:18px 22px}
+
 summary{font-weight:600;font-size:16px;cursor:pointer}
+
 details p{margin-top:12px;font-size:14.5px;color:var(--gray-text)}
 
+
+
 /* Footer CTA */
+
 .final{background:var(--navy);color:#fff;text-align:center;padding:56px 24px}
+
 .final h2{font-size:30px;letter-spacing:-.02em;margin-bottom:20px}
+
 .final .btn-white{background:#fff;color:var(--navy)}
+
 .final .btn-white:active{transform:scale(.97)}
+
 footer{background:var(--bg);border-top:1px solid var(--border);padding:28px 24px;text-align:center;font-size:13px;color:var(--gray-text)}
+
 footer .f-links{display:flex;gap:24px;justify-content:center;margin-bottom:10px}
+
 .disclaimer{font-size:12px;color:#9A958D;margin-top:6px}
 
+
+
 /* ===== Motion (CSS-only, reduced-motion safe) ===== */
+
 [data-motion]{opacity:0;transform:translateY(24px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+
 .html-show [data-motion]{opacity:1;transform:none}
+
 .motion-armed [data-motion="fade-up"]{opacity:0;transform:translateY(24px)}
+
 .motion-armed [data-motion="fade-up"].in-view{opacity:1;transform:none}
+
 .motion-armed [data-motion="fade-up"]:nth-child(2){transition-delay:.08s}
+
 .motion-armed [data-motion="fade-up"]:nth-child(3){transition-delay:.16s}
+
 @media (prefers-reduced-motion:reduce){
+
   *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+
   [data-motion]{opacity:1;transform:none}
+
   .doc{transform:none}
+
 }
+
+
 
 /* ===== Mobile ===== */
+
 @media(max-width:880px){
+
   .hero{grid-template-columns:1fr;padding:48px 0;gap:32px}
+
   .hero h1{font-size:32px}
+
   .cmp{grid-template-columns:1fr}
+
   .cmp-card.ours{order:-1}
+
   .steps{grid-template-columns:1fr}
+
   .feat{grid-template-columns:1fr}
+
   .split{grid-template-columns:1fr}
+
   .faq{grid-template-columns:1fr}
+
   .doc{transform:none}
+
   .nav-links{display:none}
+
 }
+
 </style>
+
 </head>
+
 <body>
+
 <nav>
+
   <div class="nav-in">
+
     <a class="logo" href="index.html">Estate Ledger</a>
+
     <div class="nav-links">
+
       <a href="probate-accounting.html">Guide</a>
+
       <a href="app.html?sample=1">Sample Estate</a>
+
       <a href="#faq">FAQ</a>
+
     </div>
+
   </div>
+
 </nav>
 
+
+
 <main>
+
 <!-- ============ HERO (approved hero-v6) ============ -->
+
 <section class="wrap hero" id="top">
+
   <div data-motion="fade-up">
+
     <h1>Estate Accounting Without the Spreadsheet Chaos</h1>
+
     <p class="sub">Track every asset, receipt, and distribution, then generate a balanced Summary of Account for the court.</p>
+
     <a class="btn btn-navy" href="app.html">Open the Ledger</a>
+
     <a class="btn btn-ghost" href="app.html?sample=1" style="margin-left:12px">Try the Sample Estate</a>
+
     <div class="badges">
+
       <span class="badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="#2D6A4F" stroke-width="2" stroke-linecap="round"/></svg>Free forever</span>
+
       <span class="badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="#2D6A4F" stroke-width="2" stroke-linecap="round"/></svg>No account</span>
+
       <span class="badge"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="#2D6A4F" stroke-width="2" stroke-linecap="round"/></svg>Data stays local</span>
+
     </div>
+
   </div>
+
   <div class="doc" data-motion="fade-up">
+
     <div class="doc-title">STATEMENT OF RECEIPTS AND DISBURSEMENTS</div>
+
     <div class="doc-caption">In the Matter of the Estate of J. MARSHAL, Deceased · Case No. 26-P-0814</div>
+
     <div class="doc-cols">
+
       <div class="doc-col">
+
         <h4>CHARGES</h4>
+
         <div class="doc-row"><span>Inventory (date of death)</span><span>$304,851.49</span></div>
+
         <div class="doc-row"><span>Receipts — Principal</span><span>$9,183.06</span></div>
+
         <div class="doc-row"><span>Gains on Sales</span><span>$2,232.32</span></div>
+
       </div>
+
       <div class="doc-col">
+
         <h4>CREDITS</h4>
+
         <div class="doc-row"><span>Disbursements</span><span>$23,432.43</span></div>
+
         <div class="doc-row"><span>Losses on Sales</span><span>$1,900.00</span></div>
+
         <div class="doc-row"><span>Distributions</span><span>$15,000.00</span></div>
+
       </div>
+
     </div>
+
     <div class="doc-total"><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3 8.5L6.5 12L13 4.5" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>TOTAL CHARGES = TOTAL CREDITS</div>
+
   </div>
+
 </section>
+
+
 
 <!-- ============ PAIN COMPARISON (fixed D7+ : no "tariffs" look) ============ -->
+
 <section id="compare">
+
   <div class="wrap">
+
     <h2 class="sec-title" data-motion="fade-up">Why is it free?</h2>
+
     <p class="sec-sub" data-motion="fade-up" style="max-width:720px;margin:14px auto 34px">The whole tool is free forever — no paid plans, no trials, no limits, no email. Guide pages like this one carry ads so the ledger itself never has to charge you.</p>
+
     <div class="cmp" style="margin-top:10px;grid-template-columns:1.2fr 1fr 1fr">
+
       <div class="cmp-card ours" data-motion="fade-up">
+
         <h3>Estate Ledger</h3>
+
         <div class="cmp-price free">FREE — always</div>
+
         <ul>
+
           <li>Full tool — inventory + ledger + report</li>
+
           <li>Automatic balance check</li>
+
           <li>Unlimited estates &amp; entries</li>
+
           <li>Data never leaves your device</li>
+
           <li>No ads inside the tool, ever</li>
+
         </ul>
+
       </div>
+
       <div class="cmp-card" data-motion="fade-up">
+
         <h3>Software alternatives</h3>
+
         <div class="cmp-price">$199 / estate</div>
+
         <ul>
+
           <li>Typical paid estate software</li>
+
           <li>Often server-based, trial then paid</li>
+
           <li>Requires an account</li>
+
         </ul>
+
       </div>
+
       <div class="cmp-card" data-motion="fade-up">
+
         <h3>Attorney (for complex estates)</h3>
+
         <div class="cmp-price">$3,000+</div>
+
         <ul>
+
           <li>Advice, filing, representation</li>
+
           <li>Billed hourly</li>
+
           <li>Right choice for complex estates — a ledger does not replace counsel</li>
+
         </ul>
+
       </div>
+
     </div>
+
     <p class="cmp-note">Typical market prices for context (paid software and attorney billing, shown for comparison only — these are not our plans). Estate Ledger has no paid plans. Informational organizing tool — not legal advice. Court may require its own form.</p>
+
   </div>
+
 </section>
+
+
 
 <!-- ============ HOW IT WORKS ============ -->
+
 <section id="how">
+
   <div class="wrap">
+
     <h2 class="sec-title" data-motion="fade-up">Three steps to a balanced account</h2>
+
     <div class="steps" style="margin-top:48px">
+
       <div class="step" data-motion="fade-up">
+
         <div class="step-num">1</div>
+
         <h3>List the assets</h3>
+
         <p>Record the inventory with each asset's date-of-death value — the standard courts expect.</p>
+
       </div>
+
       <div class="step" data-motion="fade-up">
+
         <div class="step-num">2</div>
+
         <h3>Record every movement</h3>
+
         <p>Receipts, payments, distributions, and the executor's own reimbursable expenses — in one clean ledger.</p>
+
       </div>
+
       <div class="step" data-motion="fade-up">
+
         <div class="step-num">3</div>
+
         <h3>Generate the Summary of Account</h3>
+
         <p>The tool assembles the charge-and-discharge statement — and checks that totals balance.</p><br>
+
         <span class="bal">balanced ✓</span>
+
       </div>
+
     </div>
+
   </div>
+
 </section>
+
+
 
 <!-- ============ FEATURES ============ -->
+
 <section id="features">
+
   <div class="wrap">
+
     <h2 class="sec-title" data-motion="fade-up">Everything the court expects to see</h2>
+
     <div class="feat" style="margin-top:44px">
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2M3 8h18M8 3v18"/></svg>
+
         <h3>Charge-and-Discharge Account</h3>
+
         <p>Assembled automatically in the standard court structure: charges, credits, and schedules.</p>
+
       </div>
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4L12 14l-3-3"/></svg>
+
         <h3>Automatic balance check</h3>
+
         <p>Total Charges must equal Total Credits — a red flag shows exactly where they don't.</p>
+
       </div>
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M3 12h18"/></svg>
+
         <h3>Income vs Principal</h3>
+
         <p>Recorded separately, as most courts and trusts require.</p>
+
       </div>
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 17l6-6 4 4 8-8"/><path d="M21 7v6h-6"/></svg>
+
         <h3>Asset sale gains &amp; losses</h3>
+
         <p>Sale proceeds compare against date-of-death value automatically — no double counting.</p>
+
       </div>
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+
         <h3>Executor expense tracking</h3>
+
         <p>Money you paid personally becomes a reimbursable claim against the estate — tracked cleanly.</p>
+
       </div>
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5M4 21h16"/></svg>
+
         <h3>PDF, CSV, JSON export</h3>
+
         <p>Print the court-ready report, export for your attorney, and back up your data anytime.</p>
+
       </div>
+
     </div>
+
   </div>
+
 </section>
+
+
 
 <!-- ============ SAMPLE DEMO ============ -->
+
 <section id="sample">
+
   <div class="wrap split">
+
     <div class="ledger-shot" data-motion="fade-up">
+
       <div class="lh"><span>DATE</span><span>DESCRIPTION</span><span>IN</span><span>OUT</span></div>
+
       <div class="lr"><span>Mar 4</span><span>Estate bank interest</span><span>$312.04</span><span></span></div>
+
       <div class="lr"><span>Mar 6</span><span>Funeral home — payment in full</span><span></span><span>$9,480.00</span></div>
+
       <div class="lr"><span>Mar 11</span><span>County filing fee (petition)</span><span></span><span>$435.00</span></div>
+
       <div class="lr"><span>Apr 2</span><span>Rental income — Elm St property</span><span>$1,850.00</span><span></span></div>
+
       <div class="lr"><span>Apr 9</span><span>Executor mileage (reimbursable)</span><span></span><span>$86.20</span></div>
+
       <div class="lr"><span>Apr 21</span><span>Dividend — brokerage account</span><span>$474.61</span><span></span></div>
+
       <div class="lr"><span>BALANCE</span><span>On hand, period end</span><span colspan="2">$2,135.45</span></div>
+
     </div>
+
     <div data-motion="fade-up">
+
       <h2 class="sec-title" style="text-align:left;margin-bottom:14px">See it before you trust it</h2>
+
       <p class="sec-sub" style="text-align:left;margin:0 0 24px">A fictional estate, fully worked: assets, 31 transactions, a balanced final account. Open it read-only — no data entry, no commitment.</p>
+
       <a class="btn btn-navy" href="app.html?sample=1">Open the Sample Estate →</a>
+
     </div>
+
   </div>
+
 </section>
 
+
+
 <!-- ============ FAQ ============ -->
+
 <section id="faq">
+
   <div class="wrap">
+
     <h2 class="sec-title" data-motion="fade-up">Questions executors ask</h2>
+
     <div class="faq" style="margin-top:40px">
+
       <details>
+
         <summary>Is this really free?</summary>
+
         <p>Yes — every feature, no limits, no email required. The project is supported by ads on this page (never inside the tool).</p>
+
       </details>
+
       <details>
+
         <summary>Will the court accept this form?</summary>
+
         <p>The report follows the standard charge-and-discharge structure many courts expect. Always confirm your court's required format — some courts have their own forms. This tool organizes and presents; it is not legal advice.</p>
+
       </details>
+
       <details>
+
         <summary>Where is my data stored?</summary>
+
         <p>In your browser only (localStorage). Nothing is uploaded. Clearing browser data erases it, so download a JSON backup weekly — we remind you.</p>
+
       </details>
+
       <details>
+
         <summary>What about taxes (Form 706 / 1041)?</summary>
+
         <p>The ledger helps organize records for your tax preparer; it does not prepare tax returns.</p>
+
       </details>
+
     </div>
+
   </div>
+
 </section>
+
+
+
 
 
 <section id="guides" style="padding:56px 0 26px">
+
   <div class="wrap">
+
     <h2 class="sec-title" data-motion="fade-up">Free guides for executors</h2>
+
     <div class="feat" style="margin-top:30px">
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+
         <h3><a href="probate-accounting.html" style="color:var(--ink)">Probate accounting guide</a></h3>
+
         <p>The whole charge-and-discharge structure in plain language, with state notes.</p>
+
       </div>
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 17V9h10"/><path d="M9 13h6"/></svg>
+
         <h3><a href="estate-inventory-template.html" style="color:var(--ink)">Inventory template</a></h3>
+
         <p>Every asset at date-of-death value, with valuation sources and non-probate flags.</p>
+
       </div>
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 11.1V12a10 10 0 1 1-5.9-9.1"/><path d="M22 4L12 14l-3-3"/></svg>
+
         <h3><a href="final-accounting-probate.html" style="color:var(--ink)">The final account</a></h3>
+
         <p>How the charge-and-discharge statement is built — and why it balances.</p>
+
       </div>
+
       <div class="feat-card" data-motion="fade-up">
+
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+
         <h3><a href="executor-fee-calculator.html" style="color:var(--ink)">Executor fee calculator</a></h3>
+
         <p>Statutory commissions for 24 states — CA §10810 tiers, income-based states, reasonable-fee notes.</p>
+
       </div>
+
     </div>
+
   </div>
+
 </section>
+
 <!-- ============ FINAL CTA ============ -->
+
 <section class="final">
+
   <h2>Ready to start the ledger?</h2>
+
   <a class="btn btn-white" href="app.html">Open the free Estate Ledger</a>
+
 </section>
+
 </main>
 
+
+
 <footer>
+
   <div class="f-links">
+
     <a href="probate-accounting.html">Probate accounting guide</a>
+
     <a href="probate-accounting.html#states">State guides</a>
+
     <a href="probate-accounting.html#glossary">Glossary</a>
+
   </div>
+
   <div>© 2026 Estate Ledger · <a href="#" id="donate-link" style="color:var(--navy)">☕ Support this project</a> · <a href="privacy.html" style="color:var(--navy)">Privacy</a></div>
+
   <div class="disclaimer">Educational organizing tool — not legal advice. Court may require its own format.</div>
+
 </footer>
 
+
+
 <script>
+
 // motion-armed только после load (в противном случае гробим SEO/reduced-motion)
+
 window.addEventListener('load', () => {
+
   const dl = document.getElementById('donate-link'), dm = document.getElementById('modal-donate');
+
   if (dl) { dl.onclick = (e) => { e.preventDefault(); dm.classList.add('open'); }; document.getElementById('donate-close').onclick = () => dm.classList.remove('open'); const dc = document.getElementById('donate-copy'); if (dc) dc.onclick = () => { navigator.clipboard.writeText('TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw').then(() => { dc.textContent = 'Copied ✓'; setTimeout(() => dc.textContent = 'Copy address', 1500); }); }; }
+
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   if (!reduce) {
+
     document.querySelectorAll('[data-motion]').forEach(el => el.closest('body').classList.add('motion-armed'));
+
     const io = new IntersectionObserver(es => es.forEach(e => {
+
       if (e.isIntersecting) { e.target.classList.add('in-view'); io.unobserve(e.target); }
+
     }), { threshold: 0.2 });
+
     document.querySelectorAll('[data-motion]').forEach(el => io.observe(el));
+
   }
+
 });
+
 </script>
 
+
+
 <div class="modal" id="modal-donate" role="dialog" aria-modal="true">
+
   <div class="modal-card">
+
     <h3>Support Estate Ledger</h3>
+
     <p style="font-size:15px">The whole tool is free and will stay free. If it saved you hours in the middle of probate, a small tip keeps the ads away longer.</p>
+
     <p style="font-size:15px;margin-bottom:14px"><b>USDT (TRC-20):</b><br><span style="font-family:monospace;font-size:13.5px" id="donate-addr">TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw</span></p>
+
     <div class="btn-row"><button class="btn btn-ghost" id="donate-copy" style="width:100%">Copy address</button><button class="btn btn-ghost" id="donate-close" style="width:100%">Close</button></div>
+
   </div>
+
 </div>
-<style>/* reuse modal css */</style>
+
+<style>
+.modal{position:fixed;inset:0;background:rgba(20,24,32,.55);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal.open{display:flex}
+.modal-card{background:#fff;border-radius:12px;max-width:420px;width:100%;padding:28px 26px;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:Inter,sans-serif}
+.modal-card h3{margin:0 0 12px;font-size:19px;color:var(--navy)}
+.modal-card p{margin:0 0 12px;color:#1A1A1A}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+</style>
+
 </body>
+
 </html>
