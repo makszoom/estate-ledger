@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estate Inventory Template (Free, Browser-Based) — Estate Ledger</title>
+<meta name="description" content="Free estate inventory template: list every asset at date-of-death value, flag non-probate transfers, and total it automatically. No signup, data stays local.">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is Estate Ledger really free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes - every feature, no limits, no email required. Ads on guide pages (never inside the tool) support it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is my data stored?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In your browser only. Nothing is uploaded to any server. A JSON backup can be restored on another device."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will my court accept this format?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The report follows the standard charge-and-discharge structure many courts expect. Always confirm your court's required format with your attorney or clerk."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is this legal advice?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Estate Ledger organizes records; it does not provide legal, tax or fiduciary advice."
+      }
+    }
+  ]
+}
+</script>
+<style>
+:root{--bg:#FAFAF8;--ink:#1A1A1A;--navy:#1E3A5F;--green:#2D6A4F;--border:#E5E2DC;--gray:#5A5F6A}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg);line-height:1.65;font-size:17px}
+nav{background:var(--navy);padding:14px 24px}
+nav .wrap{max-width:880px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+nav a.lg{font-family:Georgia,serif;font-size:19px;color:#fff;font-weight:700;text-decoration:none}
+nav a.cta{color:#fff;background:rgba(255,255,255,.14);padding:8px 18px;border-radius:8px;font-size:14.5px;font-weight:600;text-decoration:none}
+main{max-width:880px;margin:0 auto;padding:40px 24px 70px}
+.crumbs{font-size:13.5px;color:var(--gray);margin-bottom:20px}
+h1{font-size:34px;letter-spacing:-.02em;line-height:1.15;margin-bottom:16px}
+.intro{font-size:17.5px;color:var(--gray);margin-bottom:22px}
+h2{font-size:25px;letter-spacing:-.02em;margin:38px 0 14px}
+h3{font-size:19px;margin:26px 0 10px}
+p,li{font-size:16px;line-height:1.7;margin-bottom:14px}
+ul,ol{padding-left:24px;margin-bottom:16px}
+.cta-box{background:var(--navy);color:#fff;border-radius:12px;padding:30px;text-align:center;margin:40px 0}
+.cta-box h2{color:#fff;margin:0 0 14px}
+.cta-box a{display:inline-block;background:#fff;color:var(--navy);font-weight:700;padding:13px 30px;border-radius:8px;text-decoration:none;font-size:16px}
+.note{background:#F2F4F8;border-radius:10px;padding:16px 20px;font-size:14.5px;margin:20px 0}
+table{width:100%;border-collapse:collapse;margin:16px 0;font-size:15px;background:#fff;border-radius:8px;overflow:hidden}
+th{background:var(--navy);color:#fff;text-align:left;padding:10px 14px;font-size:13px}
+td{padding:10px 14px;border-top:1px solid var(--border)}
+.disc{font-size:12.5px;color:#9A958D;margin-top:26px;border-top:1px solid var(--border);padding-top:16px}
+footer{background:var(--navy);color:rgba(255,255,255,.8);padding:22px;text-align:center;font-size:13.5px}
+footer a{color:#fff}
+@media(max-width:640px){h1{font-size:27px}main{padding:28px 18px 56px}}
+</style>
+</head>
+<body>
+<nav><div class="wrap"><a class="lg" href="index.html">Estate Ledger</a><a class="cta" href="app.html">Open the free Ledger →</a></div></nav>
+<main>
+<div class="crumbs"><a href="index.html" style="color:var(--gray)">Estate Ledger</a> › Templates</div>
+<h1>Estate Inventory Template — Free and Automatic</h1>
+<p class="intro">A probate inventory lists everything the estate owns, valued as of the date of death. Most courts also want each asset classified and supported by a valuation source. A spreadsheet can hold that data, but it never totals itself or flags what you missed. The free Estate Ledger does both — right in your browser.</p>
+<h2>What a court-quality inventory includes</h2>
+<table><thead><tr><th>Field</th><th>Why the court needs it</th></tr></thead><tbody>
+<tr><td>Asset description</td><td>Identifies the exact property ("Chase checking ••4521", not "account")</td></tr>
+<tr><td>Asset class</td><td>Real estate, bank, brokerage, vehicle, personal property... — courts group totals by type</td></tr>
+<tr><td>Date-of-death value</td><td>The valuation standard: what it was worth on the day of death, not today</td></tr>
+<tr><td>Valuation source</td><td>Appraisal letter, account statement — your backup if questioned</td></tr>
+<tr><td>Passes outside probate?</td><td>TOD/beneficiary assets do not belong in the probate total — marking them correctly avoids overstating</td></tr>
+</tbody></table>
+<h2>The template problem with spreadsheets</h2>
+<p>A spreadsheet template gives you empty boxes. It never warns you that an asset has no value entered, never separates non-probate transfers from the probate total, and if you delete a row your formulas break. Executor forums are full of stories about reconciling a broken spreadsheet months later.</p>
+<p>The Estate Ledger template <b>is the tool itself</b>: enter assets once, get a clean printable inventory, and the same records flow into your final accounting at the end of probate. Nothing is retyped.</p>
+<h2>What "date-of-death value" means</h2>
+<p>Courts value the estate as it stood on the date of death — not today's prices. Real property needs an appraisal (or current tax assessment, depending on your court); bank and brokerage accounts need a statement showing the balance on that date. Personal property usually takes a good-faith market estimate. The Ledger records which source you used for every asset, so the number is always supported.</p>
+<h2>Common mistakes the Ledger prevents</h2>
+<ul>
+<li><b>Counting TOD/beneficiary assets in the probate total</b> — the Ledger keeps them listed separately</li>
+<li><b>"Unknown" ownership guessed as "no"</b> — unverified assets stay flagged until you confirm the paperwork</li>
+<li><b>Assets valued at zero by default</b> — missing values are flagged, not silently ignored</li>
+</ul>
+<div class="note">Start with a <a href="app.html?sample=1">fictional sample estate</a> — a fully worked example with 7 assets and a balanced final account, read-only.</div>
+<div class="cta-box"><h2>Build your inventory in the free Estate Ledger</h2><a href="app.html">Open the Ledger — free, no signup</a></div>
+<div class="related-links-block"> </div>
+<div style="margin:34px 0 0;display:flex;flex-wrap:wrap;gap:10px">
+  <a href="index.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Open the Ledger</a>
+  <a href="app.html?sample=1" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Sample estate</a>
+  <a href="probate-accounting.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Probate guide</a>
+  <a href="estate-inventory-template.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Inventory template</a>
+  <a href="final-accounting-probate.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Final accounting</a>
+  <a href="executor-fee-calculator.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Executor fee calculator</a>
+</div>
+<p class="disc">Estate Ledger is an educational organizing tool — not legal advice. Court filing formats vary; confirm your court's requirements. Content checked 2026-10-17.</p>
+</main>
+<footer>© 2026 Estate Ledger — Free estate accounting for US executors. <a href="privacy.html">Privacy</a></footer>
+</body>
+</html>

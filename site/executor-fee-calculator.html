@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Executor Fee Calculator by State (Free) — Estate Ledger</title>
+<meta name="description" content="Free executor fee calculator: statutory commissions for CA, NY, FL, VA, MD and 20+ states. Probate Code §10810 tiers, income-based states, reasonable-compensation notes. No signup.">
+<!-- ADSLOT-NOTE: снимем при переезде на домен -->
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+{"@type":"Question","name":"How much does an executor get paid in California?","acceptedAnswer":{"@type":"Answer","text":"California Probate Code 10810 sets a statutory schedule: 4% of the first $100,000, 3% of the next $100,000, 2% of the next $800,000, 1% of the next $9 million, 0.5% of the next $15 million. On a $1,000,000 estate that is $23,000. The personal representative (executor) fee under section 10800 uses the same schedule."}},
+{"@type":"Question","name":"What estate value is the fee based on?","acceptedAnswer":{"@type":"Answer","text":"In California, the fee is based on the GROSS value of probate assets at date-of-death value — mortgage and lien amounts are not deducted, and non-probate (TOD/beneficiary) assets are excluded. Some states instead base the fee on money received and paid out during administration."}},
+{"@type":"Question","name":"Is the executor fee taxable income?","acceptedAnswer":{"@type":"Answer","text":"Yes — executor compensation is taxable income (reported on the executor's personal return), while inheritances generally are not. Executors who are also beneficiaries often waive the fee for tax reasons."}},
+{"@type":"Question","name":"Do I have to charge the statutory fee?","acceptedAnswer":{"@type":"Answer","text":"No. In statutory states the schedule is a maximum (or a default that the court can adjust); in reasonable-compensation states the court approves what is customary locally. Family executors frequently waive part or all of the fee."}}
+]}
+</script>
+<!-- ADSLOT-TOP: 336x280 (включается при AdSense) -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#FAFAF8;--ink:#1A1A1A;--navy:#1E3A5F;--green:#2D6A4F;--border:#E5E2DC;--gray:#5A5F6A}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;color:var(--ink);background:var(--bg);line-height:1.65;font-size:17px}
+nav{background:var(--navy);padding:14px 24px}
+nav .wrap{max-width:880px;margin:0 auto;display:flex;justify-content:space-between;align-items:center}
+nav a.lg{font-family:Georgia,serif;font-size:19px;color:#fff;font-weight:700;text-decoration:none}
+nav a.cta{color:#fff;background:rgba(255,255,255,.14);padding:8px 18px;border-radius:8px;font-size:14.5px;font-weight:600;text-decoration:none}
+main{max-width:880px;margin:0 auto;padding:40px 24px 70px}
+.crumbs{font-size:13.5px;color:var(--gray);margin-bottom:20px}
+h1{font-size:34px;letter-spacing:-.02em;line-height:1.15;margin-bottom:8px}
+.sub{font-size:17.5px;color:var(--gray);margin-bottom:26px}
+h2{font-size:25px;letter-spacing:-.02em;margin:36px 0 12px}
+p,li{margin-bottom:14px}
+ul{padding-left:24px}
+.calc{background:#fff;border:1.5px solid var(--border);border-radius:14px;padding:26px;margin:22px 0 30px;box-shadow:0 4px 22px rgba(20,30,50,.06)}
+.calc-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.calc label{font-size:13.5px;color:var(--gray);display:block;margin-bottom:6px}
+.calc input,.calc select{width:100%;padding:11px 13px;font-size:16px;border:1.5px solid var(--border);border-radius:9px;background:#fff}
+.calc input:focus,.calc select:focus{outline:none;border-color:var(--navy)}
+.result{margin-top:18px;padding:16px 18px;border-radius:10px;background:#F2F4F8;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px}
+.result .amt{font-size:26px;font-weight:800;color:var(--navy)}
+.result .meta{font-size:12.5px;color:var(--gray);max-width:400px}
+.note-warn{background:#FFF6E0;border-radius:10px;padding:12px 16px;font-size:14px;margin-top:12px}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:15px;background:#fff;border-radius:8px;overflow:hidden}
+th{background:var(--navy);color:#fff;text-align:left;padding:10px 14px;font-size:13px}
+td{padding:9px 14px;border-top:1px solid var(--border)}
+.cta-box{background:var(--navy);color:#fff;border-radius:12px;padding:28px;text-align:center;margin:34px 0}
+.cta-box h2{color:#fff;margin:0 0 12px}
+.cta-box a{display:inline-block;background:#fff;color:var(--navy);font-weight:700;padding:12px 28px;border-radius:8px;text-decoration:none;font-size:16px}
+.disc{font-size:12.5px;color:#9A958D;margin-top:26px;border-top:1px solid var(--border);padding-top:16px}
+footer{background:var(--navy);color:rgba(255,255,255,.8);padding:22px;text-align:center;font-size:13.5px}
+footer a{color:#fff}
+@media(max-width:640px){h1{font-size:27px}main{padding:28px 18px 56px}.calc-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<nav><div class="wrap"><a class="lg" href="index.html">Estate Ledger</a><a class="cta" href="app.html">Open the free Ledger →</a></div></nav>
+<main>
+<div class="crumbs"><a href="index.html" style="color:var(--gray)">Estate Ledger</a> › Executor fee calculator</div>
+<h1>Executor Fee Calculator by State</h1>
+<p class="sub">How much can the executor (personal representative) charge — statutory schedules for 24 states, reasonable-fee notes for the rest.</p>
+
+<div class="calc">
+  <div class="calc-grid">
+    <div>
+      <label for="c-state">State</label>
+      <select id="c-state"></select>
+    </div>
+    <div>
+      <label for="c-value">Probate estate value (date-of-death, gross)</label>
+      <input type="text" id="c-value" placeholder="$1,000,000" inputmode="decimal">
+    </div>
+    <div id="c-income-wrap" style="display:none">
+      <label for="c-income">Money RECEIVED during administration</label>
+      <input type="text" id="c-income" placeholder="$300,000" inputmode="decimal">
+    </div>
+    <div id="c-disb-wrap" style="display:none">
+      <label for="c-disb">Money PAID OUT during administration</label>
+      <input type="text" id="c-disb" placeholder="$200,000" inputmode="decimal">
+    </div>
+    <div id="c-realty-wrap" style="display:none">
+      <label style="display:flex;gap:10px;align-items:center;margin-top:4px">
+        <input type="checkbox" id="c-realty" style="width:auto">
+        <span>Includes unsold real property (+1% in Ohio)</span>
+      </label>
+    </div>
+  </div>
+  <div class="result">
+    <div><div style="font-size:12.5px;color:var(--gray)">Statutory fee for the executor</div><div class="amt" id="r-amt">—</div></div>
+    <div class="meta" id="r-meta"></div>
+  </div>
+  <div class="note-warn" id="r-warn" style="display:none"></div>
+</div>
+
+<h2>States with statutory schedules</h2>
+<table id="tbl">
+<thead><tr><th>State</th><th>Schedule</th><th>Basis</th><th>Statute</th></tr></thead>
+<tbody></tbody>
+</table>
+
+<h2>Three kinds of fee rules</h2>
+<ul>
+<li><b>Statutory tiers</b> — declining percentage of the estate (CA, NY, FL, NV and others). The schedule is the default; courts can adjust.</li>
+<li><b>Receipts-and-disbursements basis</b> — percentage of money actually received and paid out during administration (GA, TX, NC, AL). The estate value alone doesn't determine those states' fee.</li>
+<li><b>Reasonable compensation</b> — most remaining states: courts approve what is customary locally, commonly 1.5%–5% of the probate estate.</li>
+</ul>
+
+<h2>The gross-value surprise (California)</h2>
+<p>California calculates on the <b>gross</b> estate: a $1M home with a $900K mortgage counts as a $1M asset. And the fee schedule applies <b>twice</b> — once for the executor (§10800) and once for the attorney (§10810).</p>
+<h2>The fee is taxable income</h2>
+<p>Executor compensation is taxable income on the executor's own return; the inheritance itself generally is not. Executors who are also beneficiaries often waive the fee for tax reasons.</p>
+
+<div class="cta-box">
+  <h2>Keep your ledger so the fee is easy to document</h2>
+  <a href="app.html">Open the free Estate Ledger →</a>
+</div>
+
+<p class="disc">Statutory schedules checked 2026-10-17. Laws change; confirm with your probate clerk or attorney. This calculator is educational — not legal advice, and it does not account for extraordinary services or local customs.</p>
+</main>
+<footer>© 2026 Estate Ledger — Free estate accounting for US executors. <a href="privacy.html">Privacy</a></footer>
+<script>
+(function(){
+  var SCH = {
+    CA:{name:'California',tiers:[[100000,4],[100000,3],[800000,2],[9000000,1],[15000000,0.5]],basis:'Gross probate estate',statute:'Prob. Code §10810',note:'GROSS value — mortgage is NOT deducted. Non-probate assets excluded.'},
+    NY:{name:'New York',tiers:[[100000,5],[200000,4],[700000,3],[4000000,2.5],[100000000,2]],basis:'Gross estate',statute:'SCPA 2307'},
+    FL:{name:'Florida',tiers:[[1000000,3],[4000000,2.5],[5000000,2],[10000000,1.5]],basis:'Gross estate',statute:'§733.617'},
+    NV:{name:'Nevada',tiers:[[100000,4],[100000,3],[400000,2],[500000,1.5],[9900000,0.75]],basis:'Gross estate',statute:'NRS §150.150'},
+    VA:{name:'Virginia',type:'va',core:[[400000,5],[300000,4],[300000,3],[100000000,2]],incRate:5,basis:'Estate + income',statute:'§64.2-1208 guideline',note:'Guideline: 5%/4%/3%/2% by core brackets PLUS 5% of income received. Courts adjust.'},
+    MD:{name:'Maryland',tiers:[[20000,9],[10000000,3.6]],basis:'Gross estate',statute:'Est. §6-107'},
+    OH:{name:'Ohio',tiers:[[100000,4],[300000,3],[9500000,2]],basis:'Gross estate',statute:'Rev. Code §2113.35',realty:1,note:'+1% of unsold real property value.'},
+    MO:{name:'Missouri',tiers:[[5000,5],[20000,4],[75000,3],[300000,2.75],[9700000,2]],basis:'Gross estate',statute:'§473.153 (min)'},
+    OK:{name:'Oklahoma',tiers:[[20000,5],[200000,4],[9800000,2.5]],basis:'Gross estate',statute:'§58-301'},
+    SD:{name:'South Dakota',tiers:[[20000,5],[200000,4],[9800000,2.5]],basis:'Gross estate',statute:'SDCL §29-2-7'},
+    HI:{name:'Hawaii',tiers:[[1000,6],[5000,4],[20000,3.5],[200000,2.5],[9800000,2]],basis:'Gross estate',statute:'HRS §560:3-719'},
+    IA:{name:'Iowa',tiers:[[1000,6],[5000,4],[20000,3.5],[200000,2.5],[9800000,2]],basis:'Gross estate',statute:'§633.197'},
+    NM:{name:'New Mexico',tiers:[[1000,6],[5000,4],[20000,3.5],[200000,2.5],[9800000,2]],basis:'Gross estate',statute:'§45-3-820'},
+    WY:{name:'Wyoming',tiers:[[1000,6],[5000,4],[20000,3.5],[200000,2.5],[9800000,2]],basis:'Gross estate',statute:'§2-7-812'},
+    MI:{name:'Michigan',type:'after_debts',tiers:[[10000,5],[99000,3],[13000,1.35],[914000,0.75],[457300,0.45],[8000000,0.3]],basis:'Probate estate AFTER debts',statute:'MCL §700.3721(c)',note:'Percentages apply to the estate after payment of debts.'},
+    MT:{name:'Montana',tiers:[[5000,5],[60000,3.5],[940000,2]],basis:'Gross estate',statute:'§72-3-606'},
+    GA:{name:'Georgia',type:'flows',inR:2.5,outR:2.5,basis:'Money in + money out',statute:'OCGA §53-6-60'},
+    TX:{name:'Texas',type:'flows',inR:5,outR:5,basis:'Money in + money out (max)',statute:'§242',note:'Maximum — reasonableness may be less.'},
+    NC:{name:'North Carolina',type:'flows',inR:5,outR:5,basis:'Money in + money out (max)',statute:'G.S. §28A-6-1',note:'Commission cap; court approves.'},
+    AL:{name:'Alabama',type:'flows',inR:2.5,outR:2.5,basis:'Money in + money out',statute:'§43-2-844'},
+    AR:{name:'Arkansas',type:'tiers_pp',tiers:[[100000,10],[400000,5],[9500000,3]],basis:'PERSONAL property only',statute:'§28-48-108',note:'Realty compensation set by court.'},
+    SC:{name:'South Carolina',type:'cap',cap:5,basis:'Gross estate (cap)',statute:'§62-3-719',note:'Capped at 5%.'},
+    WI:{name:'Wisconsin',type:'cap',cap:2,basis:'Gross estate (cap)',statute:'§851.34',note:'Up to 2%; extraordinary needs court approval.'},
+    MS:{name:'Mississippi',type:'cap',cap:5,basis:'Gross estate (cap)',statute:'§91-7-283',note:'Maximum 5%.'},
+    KY:{name:'Kentucky',type:'cap',cap:5,basis:'Gross estate (max)',statute:'KRS §395.150',note:'Maximum 5%.'}
+  };
+  var sel = document.getElementById('c-state');
+  Object.keys(SCH).forEach(function(k){
+    var o = document.createElement('option'); o.value = k; o.textContent = SCH[k].name;
+    sel.appendChild(o);
+  });
+  // table
+  var tb = document.querySelector('#tbl tbody');
+  Object.keys(SCH).forEach(function(k){
+    var s = SCH[k];
+    var tr = document.createElement('tr');
+    tr.innerHTML = '<td><b>'+s.name+'</b></td><td>'+(s.tiers? (s.tiers.map(function(t){return t[1]+'%'}).join(' / ')+' (declining)')
+
+ : (s.type==='va'?'guideline 5/4/3/2 +5% income':s.type==='flows'?(s.inR+'% in + '+s.outR+'% out'):('cap '+s.cap+'%')))+
+
+'</td><td>'+s.basis+'</td><td>'+s.statute+'</td>';
+    tb.appendChild(tr);
+  });
+  function pm(v){ if(typeof v==='number')return v; var c=String(v).replace(/[$,\s]/g,''); if(c===''||isNaN(parseFloat(c)))return null; return parseFloat(c); }
+  function tierFee(tiers,value){ var fee=0,rem=value; tiers.forEach(function(t){ if(rem<=0)return; var span=Math.min(rem,t[0]); fee+=span*t[1]/100; rem-=span; }); if(rem>0) fee+=rem*tiers[tiers.length-1][1]/100; return fee; }
+  function calc(){
+    var k=sel.value, s=SCH[k], v=pm(document.getElementById('c-value').value)||0;
+    var inc=pm(document.getElementById('c-income').value)||0, disb=pm(document.getElementById('c-disb').value)||0;
+    var realty=document.getElementById('c-realty').checked;
+    var fee=null, meta='', warn='';
+    var isFlows = s.type==='flows', isVA = s.type==='va', isCap = s.type==='cap';
+    document.getElementById('c-income-wrap').style.display = (isFlows||isVA)?'block':'none';
+    document.getElementById('c-disb-wrap').style.display = (isFlows||isVA)?'block':'none';
+    document.getElementById('c-realty-wrap').style.display = s.realty?'block':'none';
+    if(isFlows){ fee=inc*s.inR/100+disb*s.outR/100; meta='Based on money received/paid out — not the estate value.'; }
+    else if(isVA){ fee=tierFee(s.core,v)+inc*s.incRate/100; meta='Guideline; court may adjust. Income portion: 5% × $'+document.getElementById('c-income').value; }
+    else if(isCap){ fee=v*s.cap/100; meta='Statutory maximum '+s.cap+'%. Reasonable may be less.'; }
+    else { fee=tierFee(s.tiers,v); if(s.realty&&realty){fee+=v*s.realty/100; warn=s.note;} meta=(s.note? s.note+' ':'')+'Statute: '+s.statute; }
+    if(s.type==='flows'&&s.tiers){fee=tierFee(s.tiers,v);}
+    var meaningful = (isFlows ? (inc+disb>0) : v>0);
+    document.getElementById('r-amt').textContent = (fee!=null && meaningful) ? ('$'+fee.toLocaleString('en-US',{maximumFractionDigits:0})) : '—';
+    document.getElementById('r-meta').textContent = meta;
+    var w=document.getElementById('r-warn');
+    w.style.display=warn?'block':'none'; w.textContent=warn;
+  }
+  ['c-state','c-value','c-income','c-disb'].forEach(function(id){document.getElementById(id).addEventListener('input',calc);});
+  document.getElementById('c-realty').addEventListener('change',calc);
+  calc();
+})();
+</script>
+</body>
+</html>
