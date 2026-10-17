@@ -382,7 +382,7 @@ footer .f-links{display:flex;gap:24px;justify-content:center;margin-bottom:10px}
 // motion-armed только после load (в противном случае гробим SEO/reduced-motion)
 window.addEventListener('load', () => {
   const dl = document.getElementById('donate-link'), dm = document.getElementById('modal-donate');
-  if (dl) { dl.onclick = (e) => { e.preventDefault(); dm.classList.add('open'); }; document.getElementById('donate-close').onclick = () => dm.classList.remove('open'); }
+  if (dl) { dl.onclick = (e) => { e.preventDefault(); dm.classList.add('open'); }; document.getElementById('donate-close').onclick = () => dm.classList.remove('open'); const dc = document.getElementById('donate-copy'); if (dc) dc.onclick = () => { navigator.clipboard.writeText('TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw').then(() => { dc.textContent = 'Copied ✓'; setTimeout(() => dc.textContent = 'Copy address', 1500); }); }; }
   const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (!reduce) {
     document.querySelectorAll('[data-motion]').forEach(el => el.closest('body').classList.add('motion-armed'));
@@ -398,8 +398,8 @@ window.addEventListener('load', () => {
   <div class="modal-card">
     <h3>Support Estate Ledger</h3>
     <p style="font-size:15px">The whole tool is free and will stay free. If it saved you hours in the middle of probate, a small tip keeps the ads away longer.</p>
-    <p style="font-size:15px;margin-bottom:14px"><b>USDT (TRC-20):</b><br><span style="font-family:monospace;font-size:13.5px" id="donate-addr">[wallet address pending — set in D8/9]</span></p>
-    <div class="btn-row"><button class="btn btn-ghost" id="donate-close" style="width:100%">Close</button></div>
+    <p style="font-size:15px;margin-bottom:14px"><b>USDT (TRC-20):</b><br><span style="font-family:monospace;font-size:13.5px" id="donate-addr">TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw</span></p>
+    <div class="btn-row"><button class="btn btn-ghost" id="donate-copy" style="width:100%">Copy address</button><button class="btn btn-ghost" id="donate-close" style="width:100%">Close</button></div>
   </div>
 </div>
 <style>/* reuse modal css */</style>
