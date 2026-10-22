@@ -204,5 +204,60 @@ YMYL-паттерны: дисклеймер на каждой странице, 
 - Day 45-90: решения по AdSense (≥5K pv) и Pro-фичам (по данным)
 - Kill-check: Day+30 (≥300 pv/мес) и Day+90 (≥5K pv для рекламы)
 
+> **СТАТУС ИСПРАВЛЕНО 23.10:** Day 0–8 ✅, домен+GSC ✅ (17.10, досрочно), Day 9–14 фаза НАСТУПИЛА
+> (5 дней после запуска). Фактический запуск = 17.10 → KPI-даты смещены: +30д = 16.11, +90д = 14.01.2027.
+
+---
+
+## 11. План продвижения (добавлено 23.10, решено с Максом после SERP-анализа 22.10)
+
+> Контекст: DR=0, внешних упоминаний 0 — главный рычаг на старте = ссылки + социальные сигналы.
+> Индексация идёт по плану (4/9 PASS на 22.10, request-indexing отправлен на остальные).
+> Приоритет: исполняем запланированную фазу Day 9–14, дополняем каналами, которых план не покрывал.
+
+### 11.1 Исполнение Day 9–14 (уже по плану §10, старт сейчас)
+
+| Канал | Действие | Кто | Статус |
+|---|---|---|---|
+| Reddit r/EstatePlanning, r/probatesuccess, r/inheritance | Посты-истории + ответы в живых тредах r/personalfinance («I'm the executor…») | Макс (тексты готовлю) | ⏳ тексты |
+| FB Executor/probate support-группы (5–10 шт) | Пост от первого лица: «built free tool when settling an estate» | Макс | ⏳ тексты |
+
+Формат: вопрос-история, не спам (прописано в план §9.4). CTA = лендинг, не app.
+
+### 11.2 Outreach (новое — план не покрывал; приоритет для DR=0)
+
+| Цель | Почему | Статус |
+|---|---|---|
+| heirloom.care, executor.org | У обоих есть живые списки «Best tools for executors» — предложить добавить бесплатный тул | ⏳ письмо |
+| Probate-атторнейские блоги (lkpfirm, rexcrandell и др. из COMPETITIVE-ANALYSIS) | Разбирают тему учёта; атторни заинтересованы в дешёвке для клиентов | ⏳ |
+| alternativeto.net | Заявка «EstateExec alternative» — прямая категория есть | ⏳ |
+| ProductHunt, free-for.dev | Трафик + сигналы (без follow-линка, но реальный спрос) | ⏳ после 11.2|
+
+### 11.3 SEO-контент (каннибализационно-безопасный — урок 23.10)
+
+- ✅ **ДОБАВЛЯЕМ одну страницу:** `/charge-and-discharge-statement.html` — терм killer-фичи,
+  страницы нет (§5 не покрывал), SERP открыт (accountingtools/jotform/.gov-мелочь). По конвейеру:
+  page-template + FAQPage schema + ADSLOT + sitemap + request indexing
+- ❌ **НЕ создаём:** estate-executor-spreadsheet (дубль существующей executor-accounting-spreadsheet),
+  estate-accounting-template (слипание с estate-inventory-template), final-accounting-form
+  (слипание с final-accounting-probate) — каннибализация собственных позиций
+- 🔧 Вместо дублей: углубить существующую /executor-accounting-spreadsheet углом
+  «better than spreadsheet» (SERP живых шаблон-сайтов: sheetrix, templatesuk)
+- ⏸ By-state гайды (CA/NY/TX/FL/PA/VA/NC) — ТОЛЬКО по ROADMAP-триггеру
+  ≥30 визитов/нед на probate-accounting.html. Без данных не спринтуем.
+
+### 11.4 Запрещённые каналы (из ROADMAP-правил)
+
+- AdSense-заявка сейчас — недоступна (санкции, ROADMAP §Монетизация); ads.txt не создаём
+- Никаких покупных ссылок/PBN — YMYL-ниша, ручные санкции убьют и без того молодой домен
+- Массовый спам тредов «Check my tool» — бан + минус бренд-запросы
+
+### 11.5 Метрика успеха продвижения
+
+- Reddit/FB: реферальный трафик в GA-lite + бренд-запросы «estate ledger app» в GSC (1-я неделя)
+- Outreach: ≥1 добавление в список (heirloom/executor.org) = первый DR-источник
+- alternativeto: попадание в листинг + первый переход оттуда
+- Новая страница: индекс PASS в GSC ≤3 дней (request-indexing конвейер работает)
+
 *Ниша найдена кроном zuev-nisha-daily-v3 (7ff3b40af145), прогон №6, 15.10.2026.*
 *Gap подтверждён живой проверкой LegatePro + конкурентного ландшафта 15.10.*
