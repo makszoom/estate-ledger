@@ -6,7 +6,7 @@
 <link rel="canonical" href="https://estateledger.app/executor-fee-calculator.html">
 <title>Executor Fee Calculator by State (Free) — Estate Ledger</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<meta name="description" content="Free executor fee calculator: statutory commissions for CA, NY, FL, VA, MD and 20+ states. Probate Code §10810 tiers, income-based states, reasonable-compensation notes. No signup.">
+<meta name="description" content="Executor fee calculator: statutory commissions for CA, NY, FL, VA, MD and 20+ states. Probate Code tiers, income-based states, reasonable-compensation notes.">
 <!-- ADSLOT-NOTE: снимем при переезде на домен -->
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
@@ -51,6 +51,11 @@ td{padding:9px 14px;border-top:1px solid var(--border)}
 .disc{font-size:12.5px;color:#9A958D;margin-top:26px;border-top:1px solid var(--border);padding-top:16px}
 footer{background:var(--navy);color:rgba(255,255,255,.8);padding:22px;text-align:center;font-size:13.5px}
 footer a{color:#fff}
+.faq{display:grid;gap:12px;max-width:860px;margin:18px 0}
+.faq details{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+.faq summary{font-weight:600;font-size:16px;cursor:pointer}
+.faq details[open]{padding-bottom:8px}
+.faq p{margin:10px 0 0;font-size:15.5px;color:var(--gray)}
 @media(max-width:640px){h1{font-size:27px}main{padding:28px 18px 56px}.calc-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -116,6 +121,25 @@ footer a{color:#fff}
   <a href="app.html">Open the free Estate Ledger →</a>
 </div>
 
+<h2>Frequently asked questions</h2>
+<div class="faq">
+<details>
+<summary>How much does an executor get paid in California?</summary>
+<p>California Probate Code 10810 sets a statutory schedule: 4% of the first $100,000, 3% of the next $100,000, 2% of the next $800,000, 1% of the next $9 million, 0.5% of the next $15 million. On a $1,000,000 estate that is $23,000. The personal representative (executor) fee under section 10800 uses the same schedule.</p>
+</details>
+<details>
+<summary>What estate value is the fee based on?</summary>
+<p>In California, the fee is based on the GROSS value of probate assets at date-of-death value — mortgage and lien amounts are not deducted, and non-probate (TOD/beneficiary) assets are excluded. Some states instead base the fee on money received and paid out during administration.</p>
+</details>
+<details>
+<summary>Is the executor fee taxable income?</summary>
+<p>Yes — executor compensation is taxable income (reported on the executor's personal return), while inheritances generally are not. Executors who are also beneficiaries often waive the fee for tax reasons.</p>
+</details>
+<details>
+<summary>Do I have to charge the statutory fee?</summary>
+<p>No. In statutory states the schedule is a maximum (or a default that the court can adjust); in reasonable-compensation states the court approves what is customary locally. Family executors frequently waive part or all of the fee.</p>
+</details>
+</div>
 <p class="disc">Statutory schedules checked 2026-10-17. Laws change; confirm with your probate clerk or attorney. This calculator is educational — not legal advice, and it does not account for extraordinary services or local customs.</p>
 </main>
 <footer>© 2026 Estate Ledger — Free estate accounting for US executors. <a href="privacy.html">Privacy</a></footer>
