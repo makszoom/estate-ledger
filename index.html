@@ -13,7 +13,34 @@
 <title>Estate Ledger — Free Estate Accounting for US Executors</title>
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
-<meta name="description" content="Track every asset, receipt, and distribution of an estate, then generate a balanced Summary of Account for the court. Free forever, no account, data stays local.">
+<meta name="description" content="Track every asset, receipt and distribution of an estate, then build a balanced Summary of Account for the court. Free, no account, data stays local.">
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Estate Ledger",
+  "url": "https://estateledger.app/",
+  "applicationCategory": "FinanceApplication",
+  "operatingSystem": "Any modern web browser",
+  "description": "Free estate accounting for US executors: inventory of assets at date-of-death value, receipts and disbursements ledger, and a court-format Summary of Account.",
+  "featureList": [
+    "Inventory of assets at date-of-death value",
+    "Receipts and disbursements ledger",
+    "Carry-value tracking for inherited assets",
+    "Statutory executor fee calculator for 24 states",
+    "Court-format Summary of Account and Schedules",
+    "Runs in the browser — estate data is never uploaded"
+  ],
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD",
+    "description": "Free, no account required"
+  },
+  "isAccessibleForFree": true
+}
+</script>
 
 <!-- снимем при переходе на домен -->
 
@@ -273,6 +300,46 @@ footer .f-links{display:flex;gap:24px;justify-content:center;margin-bottom:10px}
 
 </style>
 
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is this really free?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — every feature, no limits, no email required. The project is supported by ads on this page (never inside the tool)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will the court accept this form?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The report follows the standard charge-and-discharge structure many courts expect. Always confirm your court's required format — some courts have their own forms. This tool organizes and presents; it is not legal advice."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is my data stored?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In your browser only (localStorage). Nothing is uploaded. Clearing browser data erases it, so download a JSON backup weekly — we remind you."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What about taxes (Form 706 / 1041)?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The ledger helps organize records for your tax preparer; it does not prepare tax returns."
+      }
+    }
+  ]
+}
+</script>
 </head>
 
 <body>
