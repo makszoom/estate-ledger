@@ -18,8 +18,8 @@ updated: 2026-10-17 (v2 complete + domain LIVE)
 | DNS (CF) | 4×A 185.199.108-111.153 + CNAME www, все DNS only (proxy OFF обязателен) |
 | Hosting | GitHub Pages (13 файлов, deploy = Python requests + REST API, PAT из ~/Projects/csvtojson/.env) |
 | Монетизация | free-first → 3 канала при ≥5K pv (ROADMAP.md §Монетизация): donate/affiliate/крипто-сети — AdSense из РФ недоступен (деактивации авг 2024) |
-| GSC | ✅ sc-domain:estateledger.app verified (TXT через CF Authorize), sitemap submitted (7 URL), SA gsc-bot Full |
-| Analytics | Cloudflare Web Analytics (без куки, YMYL-clean) — пока НЕ подключен |
+| GSC | ✅ sc-domain:estateledger.app verified (TXT через CF Authorize), sitemap 8 URL, SA gsc-bot Full. Ресабмит 18.11.2026 (204) |
+| Analytics | ✅ Cloudflare Web Analytics (без куки, YMYL-clean) — подключён 17.11, на всех 9 страницах |
 | Donate | ✅ USDT TRC-20 `TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw` (общий OGFY-кошелёк, решение Макса) + Copy-кнопка, commit 8aa4198 |
 | Крон-дата решения | Д90 = 2027-01-15 (kill <300 pv/30д) |
 | Проект-папка | ~/Projects/estate-ledger |
@@ -61,6 +61,28 @@ updated: 2026-10-17 (v2 complete + domain LIVE)
 
 **Деплой:** `scripts/sync-root.py` → `scripts/deploy.py`, 4 файла, все 200.
 
+---
+
+## Соответствие интенту 18.11.2026 (шаблон, авторство, связность)
+
+Аудит GSC: 12% всех показов сайта (14 из 113) — запрос **«estate inventory template»**, позиция **74**. Выдача по нему: четыре из десяти результатов — **прямые PDF-бланки** (университет Конкорд, Freshwater Trust, Heritage Law, TIAA), остальные — Schwab, суд Флориды, Pinterest. По правилу «смотри, что ранжируется, прежде чем строить» (`product-seo` → `task-pages-and-tools`) статья в такой выдаче не встанет: нужен файл.
+
+| Было | Стало |
+|---|---|
+| На `/estate-inventory-template` ноль вхождений `download`, `.csv`, `.pdf`, `.xlsx` — только текст и кнопка «постройте в инструменте» | блок **Download the blank template**: `templates/estate-inventory-template.csv` (7 колонок, 5 примеров) + `templates/estate-ledger-template.csv` (8 колонок). Без регистрации и email |
+| Колонки шаблона могли разойтись с инструментом | заголовки **совпадают с экспортом** `js/app.js` (`Name,Class,DOD value,In probate?,Value source,Reference,Sold`), классы активов — из `ASSET_CLASSES` (`core.js`). Заполненный вручную лист сверяется с Ledger без перенабора |
+| Доки трижды требуют editorial-дату (AGENTS.md §Key Decisions п.4, COMPETITIVE-ANALYSIS §Settled и §Выводы), но ни на одной странице её не было месяц | **Last checked 2026-11-17** на всех 9 страницах |
+| В JSON-LD не было `author` и `dateModified` — слабый сигнал для YMYL | добавлены во все блоки (author = Organization Estate Ledger; выдуманный эксперт запрещён) |
+| `/executor-accounting-spreadsheet` и `/receipts-disbursements-schedule` — **сироты**: ноль входящих внутренних ссылок | по 3 входящих с `/estate-inventory-template`, `/probate-accounting`, `/final-accounting-probate` |
+| Ссылки в инструмент без меток | 24 ссылки с `utm_source=<slug>&utm_medium=site` |
+| `deploy.py` не знал `.csv` и не заходил в подпапки (`os.listdir`) | `EXTS` += `.csv`, обход через `rglob`; `sync-root.py` тоже рекурсивный |
+
+**Тест:** `tests/test-intent.js` (41 проверка) — существование шаблонов, совпадение колонок с экспортом, editorial-дата, `author`/`dateModified` в схеме, отсутствие сирот, UTM.
+
+**Урок:** требование, записанное в доках, но не покрытое тестом, живёт ровно до первого релиза. Editorial-дата стояла в трёх документах и отсутствовала на всех страницах.
+
+**Деплой:** 11 файлов (9 страниц + 2 CSV), 200/201. CSV отдаются как `text/csv`.
+
 
 ---
 
@@ -88,7 +110,9 @@ estate-ledger/
 │   ├── receipts-disbursements-schedule.html # SEO 4
 │   ├── probate-accounting.html              # SEO 5 (education-хаб, глоссарий, state notes)
 │   ├── privacy.html
-│   ├── sitemap.xml           # estateledger.app URLs (7); canonical-теги на всех 9 страницах; корень КОРЕНЬ = Pages source
+│   ├── templates/            # ★ скачиваемые CSV-шаблоны (18.11): инвентарь + реестр,
+│   │                         #   колонки совпадают с экспортом js/app.js
+│   ├── sitemap.xml           # estateledger.app URLs (8); canonical-теги на всех 9 страницах; корень КОРЕНЬ = Pages source
 │   ├── robots.txt
 │   ├── css/style.css          # Trust Legal палитра + Apple Design CSS
 │   ├── js/core.js             # ★ вся логика (649 строк): Store, assets, tx, sales, report, export
@@ -96,7 +120,7 @@ estate-ledger/
 │   ├── js/fee-schedules.js    # 24 штата, статут-refs (D11)
 │   ├── js/bank-import.js      # CSV parse/mapping/dedupe (D12)
 │   └── js/sample-estate.js    # Jane E. Sample demo (?sample=1, idempotent)
-├── tests/                     # ★ 472 теста: 11 unit-файлов + e2e-day1..18 (CDP 9333, profile + --disk-cache-size=1)
+├── tests/                     # ★ 581 проверка: 14 unit-файлов + 14 e2e-day1..18 (CDP 9333, profile + --disk-cache-size=1)
 ├── scripts/                   # деплой-скрипты
 └── .env                       # секреты (НЕ в git)
 ```
@@ -153,6 +177,8 @@ estate-ledger/
 - Скиллы: landing-production (лендинг), micro-saas-static-frontend patterns, Apple Design CSS референс
 - Валидация расчётов: контрольные кейсы sample-estate (сверка Total Charges = Credits)
 - Backup перед деплоем: backup-YYYY-MM-DD/
+- **Требование из доков = тест.** Если правило записано здесь (editorial-дата, YMYL-дисклеймер, .gov-ссылки, колонки шаблона = экспорт), оно должно проверяться в `tests/test-*.js`. Правило без теста не выполняется: editorial-дата стояла в трёх документах и отсутствовала на всех страницах месяц (выяснилось 18.11.2026)
+- **Инлайн-стиль раскладки запрещён.** `grid-template-columns`, `grid-template-rows`, `flex-direction` в атрибуте `style` нельзя переопределить через `@media` — инлайн сильнее селектора. Проверяется `tests/test-responsive.js`
 
 ## Status
 
@@ -174,10 +200,15 @@ estate-ledger/
 | v2: Д19-20 полировка (debug-sweep, vision-ревью всех вью, live-верификация) | ✅ 17.10 |
 | **Домен estateledger.app** | ✅ 17.10 — куплен ($8.20 1-й год, CF Registrar/oplatym), DNS через Edit-zone-DNS токен (.env), Pages cname + HTTPS enforced |
 | **Canonical + noindex снят** | ✅ 17.10 (commits 7fd71bb + 56bb7b6 fix root-duality: Pages отдаёт КОРЕНЬ, не site/!) |
-| **GSC** | ✅ 17.10 — TXT verify (Макс Authorize), SA Full, sitemap 7 URL submitted; URL inspection NEUTRAL → краул 1-7 дней |
+| **GSC** | ✅ 17.10 — TXT verify (Макс Authorize), SA Full, sitemap submitted; URL inspection NEUTRAL → краул 1-7 дней. На 18.11: 8 URL, ресабмит 204 |
 | **Donate USDT-модалка** | ✅ 17.10 (8aa4198) — адрес TLdbF5RTXHTax71H9cAeU573pXxtMPZUuw (OGFY-кошелёк) + Copy-кнопка, live-verified |
 | Reddit-FB посты | ⏸ руками Макса (тексты готовы) |
 | Мониторинг трафика | gsc-monitor.py видит sc-domain:estateledger.app; первый чек 3-7 дней |
+| **Адаптивность: мобильные дефекты** | ✅ 17.11 (92d58d9) — инлайн `grid-template-columns` на `.cmp` ломал `@media` (548px при экране 390), таблица калькулятора без прокрутки (459px); `tests/test-responsive.js` 14 проверок |
+| **Интент «template»: скачиваемые CSV** | ✅ 18.11 (abcd294) — `templates/*.csv` (7 и 8 колонок, совпадают с экспортом `app.js`), блок Download на `/estate-inventory-template`; страница не отвечала на интент при 12% показов сайта и позиции 74 |
+| **Editorial-дата + авторство** | ✅ 18.11 — `Last checked 2026-11-17` на 9 страницах, `author` + `dateModified` в JSON-LD. Требование стояло в доках месяц и не выполнялось |
+| **Сироты и UTM** | ✅ 18.11 — `/executor-accounting-spreadsheet` и `/receipts-disbursements-schedule` получили по 3 входящих ссылки; 24 ссылки в инструмент с `utm_source` |
+| **Тесты** | ✅ 18.11 — **581 проверка** (345 unit/SEO/адаптивность/интент + 236 e2e), 0 FAIL |
 
 ## V2 Development Plan (см. docs/V2-SPEC.md — полный)
 

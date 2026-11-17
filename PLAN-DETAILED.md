@@ -138,7 +138,7 @@
 > **СТАТУС v2 (17.10.2026): ВСЁ ВЫШЕПЕРЕЧИСЛЕННОЕ РЕАЛИЗОВАНО.**
 > Carry-value switch (7 штатов) — Д9-10; executor fee calculator (24 штата + SEO-лендинг) — Д11;
 > Bank CSV import — Д12-13; CA companion worksheet — Д14; multi-estate dashboard + archive — Д18.
-> Полный suite: 472 теста PASS. Всё LIVE. Осталось вне продукта: домен/GSC/AdSense (решение Макса, ROADMAP.md).
+> Полный suite: **581 проверка PASS** (на 18.11.2026; было 472 на 17.10). Всё LIVE. Осталось вне продукта: домен/GSC/AdSense (решение Макса, ROADMAP.md).
 
 ## 5. SEO-архитектура (6 страниц + education)
 
