@@ -80,6 +80,10 @@ footer a{color:#fff}
 .faq details[open]{padding-bottom:8px}
 .faq p{margin:10px 0 0;font-size:15.5px;color:var(--gray)}
 @media(max-width:640px){h1{font-size:27px}main{padding:28px 18px 56px}}
+
+/* Контейнер прокрутки: без него таблица на узком экране расширяет всю
+   страницу, и горизонтальный скролл появляется у body, а не у таблицы. */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 </style>
     <!-- Cloudflare Web Analytics (cookieless) -->
     <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "bd1e63cd443640418eebda4cbbfd6c66"}'></script>
@@ -91,12 +95,12 @@ footer a{color:#fff}
 <h1>Final Accounting in Probate: The Charge-and-Discharge Statement</h1>
 <p class="intro">At the end of administration the executor owes the court a final accounting: what came into the estate, what went out, and what remains. Most US courts expect it in a charge-and-discharge structure — the same shape for CA, NY and the states that accept a standard form.</p>
 <h2>The two columns every court looks for</h2>
-<table><thead><tr><th>CHARGES</th><th>CREDITS</th></tr></thead><tbody>
+<div class="table-wrap"><table><thead><tr><th>CHARGES</th><th>CREDITS</th></tr></thead><tbody>
 <tr><td>Inventory of assets at date of death</td><td>Disbursements (debts, expenses, fees)</td></tr>
 <tr><td>Receipts during administration</td><td>Losses on sales</td></tr>
 <tr><td>Gains on sales (over the date-of-death value)</td><td>Distributions to beneficiaries</td></tr>
 <tr><td></td><td>Property on hand at the end</td></tr>
-</tbody></table>
+</tbody></table></div>
 <p><b>TOTAL CHARGES must equal TOTAL CREDITS.</b> Every dollar that came in is accounted for by a payment, a distribution, or an asset still held. When the two totals do not match, the difference tells you exactly what record is missing.</p>
 <h2>The three schedules attached to it</h2>
 <ol>
