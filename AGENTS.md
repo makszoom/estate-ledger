@@ -144,7 +144,9 @@ estate-ledger/
 │   ├── js/bank-import.js      # CSV parse/mapping/dedupe (D12)
 │   └── js/sample-estate.js    # Jane E. Sample demo (?sample=1, idempotent)
 ├── tests/                     # ★ 581 проверка: 14 unit-файлов + 14 e2e-day1..18 (CDP 9333, profile + --disk-cache-size=1)
-├── scripts/                   # деплой-скрипты
+├── seo/                       # ★ рабочие заметки по SEO (18.11): профиль, журнал правок,
+│                              #   уроки, факты о продукте, гипотезы. НЕ деплоится и не публикуется
+├── scripts/                   # деплой-скрипты (sync-root, deploy, clean-main)
 └── .env                       # секреты (НЕ в git)
 ```
 
@@ -233,6 +235,7 @@ estate-ledger/
 | **Editorial-дата + авторство** | ✅ 18.11 — `Last checked 2026-11-17` на 9 страницах, `author` + `dateModified` в JSON-LD. Требование стояло в доках месяц и не выполнялось |
 | **Сироты и UTM** | ✅ 18.11 — `/executor-accounting-spreadsheet` и `/receipts-disbursements-schedule` получили по 3 входящих ссылки; 24 ссылки в инструмент с `utm_source` |
 | **Тесты** | ✅ 18.11 — **581 проверка** (345 unit/SEO/адаптивность/интент + 236 e2e), 0 FAIL |
+| **SEO workspace `seo/`** | ✅ 18.11 (`405b9ac`) — методика скилла `product-seo` внедрена: профиль, журнал правок с датами проверок, уроки, факты о продукте, гипотезы. `measure.mjs` проверен на живых данных (недельный тренд 0 → 21 → 20 показов) |
 | **Чистка main от внутренних файлов** | ✅ 18.11 — 93 файла убраны из публикуемой ветки: `PLAN-DETAILED.md`, `AGENTS.md`, `docs/` (5), `docs/landing/*.png` (20+), `tests/` (25), `site/` (14, дубль сайта), `scripts/`, `package.json`. Все 10 путей → 404, сайт жив. Скрипт `scripts/clean-main.py` с `--dry-run` и защитой `js/`/`templates/`/`css/` |
 
 ## V2 Development Plan (см. docs/V2-SPEC.md — полный)
@@ -283,3 +286,37 @@ estate-ledger/
 ## Documentation Update Rule
 
 After significant changes — update this file and relevant skill before ending session. Significant: files/dirs added/removed, stack changes, key URLs/IDs, architecture, monetization config. Not significant: single content pages, cosmetic CSS, temporary fixes.
+
+## SEO workspace 18.11.2026 (`seo/`)
+
+Папка `seo/` — рабочие заметки по методике скилла `product-seo`. Читать **в начале каждой
+сессии**: `seo/site-profile.md`, `seo/change-log.md`, `seo/lessons.md`. Сообщать владельцу,
+какие проверки наступили или просрочены.
+
+| Файл | Что внутри |
+|---|---|
+| `seo/site-profile.md` | продукт, «кто платит» (free-first), pile A / pile B тем с GSC-числами, standing decisions, где живут данные |
+| `seo/change-log.md` | каждая правка с бэкапом и датами проверок (+1 нед, +3 нед) и результатом |
+| `seo/lessons.md` | что сработало и что делать иначе; читать перед каждой новой страницей |
+| `seo/product-facts.md` | единственный источник правды о продукте, каждая строка с датой проверки |
+| `seo/experiments.md` | гипотеза на страницу, записанная ДО результата |
+
+**Замер:** `measure.mjs` из скилла. Windows-путь обязателен (MSYS `~/...` node не понимает):
+
+```
+export GSC_SERVICE_ACCOUNT_FILE="C:/Users/MiniPC/.hermes/gsc-service-account.json"
+node "C:/Users/MiniPC/AppData/Local/hermes/skills/product-seo/scripts/measure.mjs" \
+  --page /estate-inventory-template --date 2026-11-18 --site sc-domain:estateledger.app
+```
+
+Сравнивает целые недели до/после (день изменения исключён), применяет правило отката:
+21+ дней, клики −30% и позиция хуже → откат; позиция улучшается неделя к неделе → ждать.
+
+**Сезонность:** у estate-ledger цикла нет, правило применимо напрямую. У csv-to-json цикл
+есть (дедлайн GSTR-1 11-го числа, 60% трафика месяца в 9–11-х) — там сравнение произвольных
+периодов даёт ложный результат.
+
+**Ближайшие проверки:** 2026-11-25 (+1 нед после правок 18.11), 2026-12-09 (полный вердикт).
+
+`seo/` не деплоится (deploy берёт только `site/`) и не публикуется (Pages отдаёт корень
+`main`, а `seo/` живёт в ветке `source`). Проверено живьём: `/seo/site-profile.md` → 404.
