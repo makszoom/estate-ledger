@@ -7,3 +7,8 @@ __pycache__/
 Thumbs.db
 backup-*/
 *.bak
+
+# seo workspace: выгрузки и скриншоты не в git
+seo/data/
+seo/shots/
+seo/backups/
