@@ -6,13 +6,15 @@ import shutil, pathlib, sys
 P = pathlib.Path(__file__).resolve().parent.parent
 SITE = P / 'site'
 ROOT = P
-FILES = [p.name for p in SITE.iterdir() if p.is_file()]
+# rglob: site/templates/*.csv тоже должны попасть в корень (Pages отдаёт ROOT)
+FILES = [p.relative_to(SITE) for p in SITE.rglob('*') if p.is_file()]
 copied = 0
-for name in FILES:
-    src = SITE / name
-    dst = ROOT / name
+for rel in FILES:
+    src = SITE / rel
+    dst = ROOT / rel
+    dst.parent.mkdir(parents=True, exist_ok=True)
     if not dst.exists() or src.read_bytes() != dst.read_bytes():
         shutil.copy2(src, dst)
         copied += 1
-        print(f'  synced {name}')
+        print(f'  synced {rel}')
 print(f'Done: {copied} файл(ов) синхронизировано root <- site')

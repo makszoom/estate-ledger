@@ -8,8 +8,7 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="description" content="Free estate inventory template: list every asset at date-of-death value, flag non-probate transfers, and total it automatically. No signup, data stays local.">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-<script type="application/ld+json">
-{
+<script type="application/ld+json">{
   "@context": "https://schema.org",
   "@type": "FAQPage",
   "mainEntity": [
@@ -45,9 +44,14 @@
         "text": "No. Estate Ledger organizes records; it does not provide legal, tax or fiduciary advice."
       }
     }
-  ]
-}
-</script>
+  ],
+  "dateModified": "2026-11-17",
+  "author": {
+    "@type": "Organization",
+    "name": "Estate Ledger",
+    "url": "https://estateledger.app/"
+  }
+}</script>
 <style>
 :root{--bg:#FAFAF8;--ink:#1A1A1A;--navy:#1E3A5F;--green:#2D6A4F;--border:#E5E2DC;--gray:#5A5F6A}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -84,16 +88,40 @@ footer a{color:#fff}
 /* Контейнер прокрутки: без него таблица на узком экране расширяет всю
    страницу, и горизонтальный скролл появляется у body, а не у таблицы. */
 .table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+/* Блок скачивания шаблона. Аудитория 50-75 лет: ссылки-кнопки не мельче 44px
+   по высоте, контраст текста на бумажном фоне, без hover-only подсказок. */
+.download-box{border:1px solid var(--border);border-radius:12px;padding:24px 26px;margin:28px 0;background:#fff}
+.download-title{font-size:20px;margin:0 0 8px}
+.download-box p{margin:0 0 10px;font-size:16px}
+.download-list{list-style:none;margin:14px 0 2px;padding:0}
+.download-list li{font-size:15px;color:var(--gray-text);margin-bottom:14px;line-height:1.55}
+.download-link{display:inline-block;min-height:44px;line-height:22px;padding:11px 18px;margin-bottom:6px;
+  border:1px solid var(--navy);border-radius:8px;color:var(--navy);font-weight:600;text-decoration:none;background:#fff}
+.download-link:active{transform:scale(.97)}
+.download-note{font-size:14px;color:var(--gray-text);margin-top:10px}
+@media(max-width:640px){.download-box{padding:18px 16px}}
 </style>
     <!-- Cloudflare Web Analytics (cookieless) -->
     <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "bd1e63cd443640418eebda4cbbfd6c66"}'></script>
 </head>
 <body>
-<nav><div class="wrap"><a class="lg" href="index.html">Estate Ledger</a><a class="cta" href="app.html">Open the free Ledger →</a></div></nav>
+<nav><div class="wrap"><a class="lg" href="index.html">Estate Ledger</a><a class="cta" href="app.html?utm_source=estate-inventory-template&utm_medium=site">Open the free Ledger →</a></div></nav>
 <main>
 <div class="crumbs"><a href="index.html" style="color:var(--gray)">Estate Ledger</a> › Templates</div>
 <h1>Estate Inventory Template — Free and Automatic</h1>
 <p class="intro">A probate inventory lists everything the estate owns, valued as of the date of death. Most courts also want each asset classified and supported by a valuation source. A spreadsheet can hold that data, but it never totals itself or flags what you missed. The free Estate Ledger does both — right in your browser.</p>
+
+<div class="download-box">
+  <h2 class="download-title">Download the blank template</h2>
+  <p>Two sheets, no signup, no email. They open in Excel, Google Sheets or Numbers.</p>
+  <ul class="download-list">
+    <li><a class="download-link" href="templates/estate-inventory-template.csv" download>Estate inventory template (CSV, 7 columns)</a> &mdash; one row per asset, with worked examples kept in place so you can see the expected format.</li>
+    <li><a class="download-link" href="templates/estate-ledger-template.csv" download>Ledger template (CSV, 8 columns)</a> &mdash; one row per money movement, matching the four types a court report needs.</li>
+  </ul>
+  <p class="download-note">The columns match what the free Ledger exports, so a sheet filled in by hand can be checked against the tool without retyping. Values in the examples are made up &mdash; delete them and enter your own.</p>
+</div>
+
 <h2>What a court-quality inventory includes</h2>
 <div class="table-wrap"><table><thead><tr><th>Field</th><th>Why the court needs it</th></tr></thead><tbody>
 <tr><td>Asset description</td><td>Identifies the exact property ("Chase checking ••4521", not "account")</td></tr>
@@ -113,12 +141,12 @@ footer a{color:#fff}
 <li><b>"Unknown" ownership guessed as "no"</b> — unverified assets stay flagged until you confirm the paperwork</li>
 <li><b>Assets valued at zero by default</b> — missing values are flagged, not silently ignored</li>
 </ul>
-<div class="note">Start with a <a href="app.html?sample=1">fictional sample estate</a> — a fully worked example with 7 assets and a balanced final account, read-only.</div>
-<div class="cta-box"><h2>Build your inventory in the free Estate Ledger</h2><a href="app.html">Open the Ledger — free, no signup</a></div>
-<div class="related-links-block"> </div>
+<div class="note">Start with a <a href="app.html?sample=1&utm_source=estate-inventory-template&utm_medium=site">fictional sample estate</a> — a fully worked example with 7 assets and a balanced final account, read-only.</div>
+<div class="cta-box"><h2>Build your inventory in the free Estate Ledger</h2><a href="app.html?utm_source=estate-inventory-template&utm_medium=site">Open the Ledger — free, no signup</a></div>
+<div class="related-links-block">  <a href="executor-accounting-spreadsheet.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Executor accounting spreadsheet</a> <a href="receipts-disbursements-schedule.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Receipts & disbursements</a></div>
 <div style="margin:34px 0 0;display:flex;flex-wrap:wrap;gap:10px">
   <a href="index.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Open the Ledger</a>
-  <a href="app.html?sample=1" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Sample estate</a>
+  <a href="app.html?sample=1&utm_source=estate-inventory-template&utm_medium=site" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Sample estate</a>
   <a href="probate-accounting.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Probate guide</a>
   <a href="estate-inventory-template.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Inventory template</a>
   <a href="final-accounting-probate.html" style="padding:8px 16px;font-size:14px;background:#fff;border:1px solid var(--border);border-radius:8px;text-decoration:none;color:var(--ink)">Final accounting</a>
@@ -143,7 +171,7 @@ footer a{color:#fff}
 <p>No. Estate Ledger organizes records; it does not provide legal, tax or fiduciary advice.</p>
 </details>
 </div>
-<p class="disc">Estate Ledger is an educational organizing tool — not legal advice. Court filing formats vary; confirm your court's requirements. Content checked 2026-10-17.</p>
+<p class="disc">Estate Ledger is an educational organizing tool — not legal advice. Court filing formats vary; confirm your court's requirements. Content checked 2026-10-17. <b>Last checked 2026-11-17</b>.</p>
 </main>
 <footer>© 2026 Estate Ledger — Free estate accounting for US executors. <a href="privacy.html">Privacy</a></footer>
 </body>

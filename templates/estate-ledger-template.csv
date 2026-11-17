@@ -1,0 +1,6 @@
+Date,Type,Account,Description,Payee/Beneficiary,Amount,CheckNo,Reference
+2026-03-14,money_in,Principal,Refund of overpaid utility bill,City Utilities,86.40,,Final bill 02/28
+2026-03-18,money_out,Principal,Filing fee,County Probate Court,485.00,1041,Receipt 2214
+2026-04-02,money_out,Principal,Estate attorney - first installment,Harlow & Finch LLP,2500.00,1042,Invoice 8841
+2026-04-15,distribution,Principal,Partial distribution to beneficiary,Dana Sample,10000.00,1043,Wire confirmation
+2026-05-01,money_in,Income,Interest on savings account,First National Bank,42.18,,Statement 04/30

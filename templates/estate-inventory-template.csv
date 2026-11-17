@@ -1,0 +1,6 @@
+Name,Class,DOD value,In probate?,Value source,Reference,Sold
+Checking account - First National, Bank Account,12400.00,yes,account_statement,Closing statement 03/14,no
+Primary residence - 1420 Oak Street,Real Estate,315000.00,yes,appraisal,Appraisal dated 03/12,no
+2019 Honda Accord,Vehicle,14500.00,no,market_estimate,Private sale valuation,no
+Series I savings bonds,Cash,8000.00,unknown,other,Bonds held in safe deposit box,no
+50% interest in Oak Street LLC,Business Interest,,,,,no

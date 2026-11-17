@@ -17,14 +17,17 @@
 import base64
 import os
 import sys
+from pathlib import Path
 
 import requests
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, 'site')
+SITE_PATH = Path(SITE)
 ENV = os.path.join(os.path.expanduser('~'), 'Projects', 'csvtojson', '.env')
 OWNER, REPO, BRANCH = 'makszoom', 'estate-ledger', 'main'
-EXTS = ('.html', '.xml', '.svg', '.png', '.json', '.jpg', '.webp', '.txt')
+# .csv добавлен 17.11.2026: шаблоны инвентаря и реестра живут в site/templates/
+EXTS = ('.html', '.xml', '.svg', '.png', '.json', '.jpg', '.webp', '.txt', '.csv')
 
 
 def token():
@@ -44,7 +47,9 @@ def main():
     force_all = '--all' in sys.argv
     H = {'Authorization': f'Bearer {token()}', 'Accept': 'application/vnd.github+json'}
 
-    files = sorted(f for f in os.listdir(SITE) if f.endswith(EXTS))
+    # rglob, а не listdir: site/templates/*.csv лежат в подпапке
+    files = sorted(str(f.relative_to(SITE_PATH)).replace(os.sep, '/') for f in SITE_PATH.rglob('*')
+                   if f.is_file() and f.name.endswith(EXTS))
     if not files:
         raise SystemExit('в site/ нет файлов для деплоя')
 
