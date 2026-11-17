@@ -24,7 +24,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SITE = os.path.join(ROOT, 'site')
 ENV = os.path.join(os.path.expanduser('~'), 'Projects', 'csvtojson', '.env')
 OWNER, REPO, BRANCH = 'makszoom', 'estate-ledger', 'main'
-EXTS = ('.html', '.xml', '.svg', '.png', '.json', '.jpg', '.webp')
+EXTS = ('.html', '.xml', '.svg', '.png', '.json', '.jpg', '.webp', '.txt')
 
 
 def token():
