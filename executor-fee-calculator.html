@@ -57,6 +57,10 @@ footer a{color:#fff}
 .faq details[open]{padding-bottom:8px}
 .faq p{margin:10px 0 0;font-size:15.5px;color:var(--gray)}
 @media(max-width:640px){h1{font-size:27px}main{padding:28px 18px 56px}.calc-grid{grid-template-columns:1fr}}
+
+/* Контейнер прокрутки: без него таблица на узком экране расширяет всю
+   страницу, и горизонтальный скролл появляется у body, а не у таблицы. */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 </style>
     <!-- Cloudflare Web Analytics (cookieless) -->
     <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "bd1e63cd443640418eebda4cbbfd6c66"}'></script>
@@ -101,10 +105,10 @@ footer a{color:#fff}
 </div>
 
 <h2>States with statutory schedules</h2>
-<table id="tbl">
+<div class="table-wrap"><table id="tbl">
 <thead><tr><th>State</th><th>Schedule</th><th>Basis</th><th>Statute</th></tr></thead>
 <tbody></tbody>
-</table>
+</table></div>
 
 <h2>Three kinds of fee rules</h2>
 <ul>

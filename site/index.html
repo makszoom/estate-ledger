@@ -152,6 +152,11 @@ section{padding:64px 0}
 
 .cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
 
+/* Наша карточка шире двух конкурентов. Пропорции жили инлайном на .cmp,
+   из-за чего инлайн перебивал правило @media и сетка на мобиле оставалась
+   трёхколоночной — страница растягивалась до 548px при экране 390px. */
+.cmp-3{grid-template-columns:1.2fr 1fr 1fr;margin-top:10px}
+
 .cmp-card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow-sm)}
 
 .cmp-card.ours{border:2px solid var(--navy)}
@@ -448,7 +453,7 @@ footer .f-links{display:flex;gap:24px;justify-content:center;margin-bottom:10px}
 
     <p class="sec-sub" data-motion="fade-up" style="max-width:720px;margin:14px auto 34px">The whole tool is free forever — no paid plans, no trials, no limits, no email. Guide pages like this one carry ads so the ledger itself never has to charge you.</p>
 
-    <div class="cmp" style="margin-top:10px;grid-template-columns:1.2fr 1fr 1fr">
+    <div class="cmp cmp-3">
 
       <div class="cmp-card ours" data-motion="fade-up">
 

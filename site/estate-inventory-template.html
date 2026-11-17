@@ -80,6 +80,10 @@ footer a{color:#fff}
 .faq details[open]{padding-bottom:8px}
 .faq p{margin:10px 0 0;font-size:15.5px;color:var(--gray)}
 @media(max-width:640px){h1{font-size:27px}main{padding:28px 18px 56px}}
+
+/* Контейнер прокрутки: без него таблица на узком экране расширяет всю
+   страницу, и горизонтальный скролл появляется у body, а не у таблицы. */
+.table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 </style>
     <!-- Cloudflare Web Analytics (cookieless) -->
     <script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "bd1e63cd443640418eebda4cbbfd6c66"}'></script>
@@ -91,13 +95,13 @@ footer a{color:#fff}
 <h1>Estate Inventory Template — Free and Automatic</h1>
 <p class="intro">A probate inventory lists everything the estate owns, valued as of the date of death. Most courts also want each asset classified and supported by a valuation source. A spreadsheet can hold that data, but it never totals itself or flags what you missed. The free Estate Ledger does both — right in your browser.</p>
 <h2>What a court-quality inventory includes</h2>
-<table><thead><tr><th>Field</th><th>Why the court needs it</th></tr></thead><tbody>
+<div class="table-wrap"><table><thead><tr><th>Field</th><th>Why the court needs it</th></tr></thead><tbody>
 <tr><td>Asset description</td><td>Identifies the exact property ("Chase checking ••4521", not "account")</td></tr>
 <tr><td>Asset class</td><td>Real estate, bank, brokerage, vehicle, personal property... — courts group totals by type</td></tr>
 <tr><td>Date-of-death value</td><td>The valuation standard: what it was worth on the day of death, not today</td></tr>
 <tr><td>Valuation source</td><td>Appraisal letter, account statement — your backup if questioned</td></tr>
 <tr><td>Passes outside probate?</td><td>TOD/beneficiary assets do not belong in the probate total — marking them correctly avoids overstating</td></tr>
-</tbody></table>
+</tbody></table></div>
 <h2>The template problem with spreadsheets</h2>
 <p>A spreadsheet template gives you empty boxes. It never warns you that an asset has no value entered, never separates non-probate transfers from the probate total, and if you delete a row your formulas break. Executor forums are full of stories about reconciling a broken spreadsheet months later.</p>
 <p>The Estate Ledger template <b>is the tool itself</b>: enter assets once, get a clean printable inventory, and the same records flow into your final accounting at the end of probate. Nothing is retyped.</p>
